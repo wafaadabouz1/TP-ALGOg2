@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TP Algo Avancé - Interface Dashboard</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: #333;
+      }
+
+      .main-container {
+        width: 100%;
+        max-width: 1300px;
+        margin: 0 auto;
+      }
+
+      /* Header amélioré avec gradient textuel */
+      .hero-header {
+        text-align: center;
+        margin-bottom: 50px;
+        padding: 0 20px;
+      }
+
+      .hero-title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #ffffff 0%, #e6e6e6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+        letter-spacing: -0.5px;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+
+      .hero-title::after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 2px;
+      }
+
+      .hero-subtitle {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 700px;
+        margin: 25px auto 30px;
+        line-height: 1.6;
+        font-weight: 300;
+      }
+
+      .module-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-size: 1rem;
+        color: white;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Section Info - design amélioré */
+      .info-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 35px;
+        margin: 30px 0 50px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .info-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+      }
+
+      .info-section h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .info-section h2 i {
+        color: #667eea;
+        font-size: 1.5rem;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+      }
+
+      .info-card {
+        background: linear-gradient(
+          135deg,
+          rgba(102, 126, 234, 0.08) 0%,
+          rgba(118, 75, 162, 0.08) 100%
+        );
+        border-radius: 15px;
+        padding: 25px;
+        border: 1px solid rgba(102, 126, 234, 0.15);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .info-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(102, 126, 234, 0.1);
+        border-color: #667eea;
+      }
+
+      .info-label {
+        font-size: 0.9rem;
+        color: #667eea;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .info-label i {
+        font-size: 1.1rem;
+      }
+
+      .info-content {
+        font-size: 1.1rem;
+        color: #2d3748;
+        line-height: 1.5;
+        font-weight: 500;
+      }
+
+      /* Conteneur des TP - Design premium */
+      .tp-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 40px 30px;
+        margin: 30px 0;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .tp-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+      }
+
+      .tp-section h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 30px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .tp-section h2 i {
+        color: #667eea;
+        font-size: 1.8rem;
+      }
+
+      .tp-intro {
+        font-size: 1.1rem;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 40px;
+        text-align: center;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+      }
+
+      /* Conteneur des cartes TP */
+      .tp-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 30px;
+        padding: 10px;
+      }
+
+      /* Carte TP - Design premium */
+      .tp-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 35px 30px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .tp-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+      }
+
+      .tp-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Badge numéro */
+      .tp-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: white;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+        z-index: 2;
+      }
+
+      .tp-card:hover .tp-badge {
+        transform: rotate(360deg);
+      }
+
+      /* Icône */
+      .tp-icon {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+      }
+
+      .tp-card:hover .tp-icon {
+        transform: translateY(-5px) scale(1.1);
+      }
+
+      .tp-icon i {
+        font-size: 28px;
+        color: white;
+      }
+
+      /* Contenu de la carte */
+      .tp-card h3 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 10px;
+        letter-spacing: -0.3px;
+      }
+
+      .tp-subtitle {
+        font-size: 0.95rem;
+        color: #718096;
+        margin-bottom: 25px;
+        line-height: 1.5;
+        max-width: 280px;
+        font-weight: 500;
+      }
+
+      .tp-description {
+        font-size: 0.95rem;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 30px;
+        flex-grow: 1;
+        padding: 0 10px;
+      }
+
+      /* Tags */
+      .tp-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 25px;
+      }
+
+      .tp-tag {
+        padding: 6px 15px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* Bouton premium */
+      .tp-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px 35px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        width: 100%;
+        max-width: 250px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      .tp-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.2),
+          rgba(255, 255, 255, 0)
+        );
+        transition: left 0.6s;
+        z-index: -1;
+      }
+
+      .tp-button:hover::before {
+        left: 100%;
+      }
+
+      .tp-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      }
+
+      .tp-button i {
+        font-size: 1.1rem;
+        transition: transform 0.3s;
+      }
+
+      .tp-button:hover i {
+        transform: translateX(5px);
+      }
+
+      /* Footer */
+      .page-footer {
+        text-align: center;
+        margin-top: 60px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.95rem;
+        padding: 20px;
+      }
+
+      .footer-content {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 15px 30px;
+        border-radius: 12px;
+        display: inline-block;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .hero-title {
+          font-size: 2.5rem;
+        }
+
+        .hero-subtitle {
+          font-size: 1.1rem;
+        }
+
+        .tp-container {
+          grid-template-columns: 1fr;
+          padding: 5px;
+          gap: 25px;
+        }
+
+        .tp-section,
+        .info-section {
+          padding: 30px 20px;
+          margin: 20px 0;
+        }
+
+        .tp-card,
+        .info-card {
+          padding: 30px 20px;
+        }
+
+        .tp-card h3 {
+          font-size: 1.5rem;
+        }
+
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-title {
+          font-size: 2rem;
+        }
+
+        .module-badge {
+          font-size: 0.9rem;
+          padding: 8px 20px;
+        }
+
+        .tp-container {
+          gap: 20px;
+        }
+
+        .tp-card,
+        .info-card {
+          padding: 25px 15px;
+        }
+
+        .tp-icon {
+          width: 60px;
+          height: 60px;
+        }
+
+        .tp-icon i {
+          font-size: 24px;
+        }
+      }
+    </style>
+    <!-- Font Awesome pour les icônes -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="main-container">
+      <!-- Header avec gradient textuel -->
+      <header class="hero-header">
+        <div class="module-badge">TP Algorithmes Avancés</div>
+        <h1 class="hero-title">Dashboard Éducatif</h1>
+        <p class="hero-subtitle">
+          Interface interactive pour l'exploration des algorithmes fondamentaux
+          à travers des visualisations et implémentations détaillées
+        </p>
+      </header>
+
+      <!-- Section Info - design premium -->
+      <section class="info-section">
+        <h2><i class="fas fa-info-circle"></i> Informations du Projet</h2>
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-label"><i class="fas fa-users"></i> Équipe</div>
+            <div class="info-content">
+              DABOUZ Wafaa • HABBECHE Meriem • HAZI Nour ElHouda • KEDDAH Lyna •
+              DOUHA Douaa • SIDI MOUSSA Chaïma
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-label">
+              <i class="fas fa-user-graduate"></i> Groupe
+            </div>
+            <div class="info-content">Groupe 2</div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-label">
+              <i class="fas fa-chalkboard-teacher"></i> Professeur
+            </div>
+            <div class="info-content">Mme Arroussi</div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-label"><i class="fas fa-book"></i> Module</div>
+            <div class="info-content">Algorithmes Avancés</div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-label">
+              <i class="fas fa-calendar-alt"></i> Année académique
+            </div>
+            <div class="info-content">2024–2025</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section des TP - design premium -->
+      <section class="tp-section">
+        <h2><i class="fas fa-laptop-code"></i> Travaux Pratiques</h2>
+
+        <p class="tp-intro">
+          Découvrez nos 4 travaux pratiques interactifs. Chaque TP propose une
+          implémentation complète avec visualisation en temps réel, analyse de
+          complexité et interface intuitive pour une meilleure compréhension des
+          concepts algorithmiques.
+        </p>
+
+        <div class="tp-container">
+          <!-- TP1 - Graphes -->
+          <div class="tp-card">
+            <div class="tp-badge">1</div>
+            <div class="tp-icon">
+              <i class="fas fa-project-diagram"></i>
+            </div>
+            <div class="tp-tags">
+              <span class="tp-tag">Graphes</span>
+              <span class="tp-tag">Matrices</span>
+            </div>
+            <h3>Théorie des Graphes</h3>
+            <div class="tp-subtitle">Matrices d'adjacence et visualisation</div>
+            <p class="tp-description">
+              Implémentation complète des structures de graphes avec différentes
+              représentations. Support pour les graphes orientés/non-orientés,
+              pondérés/non-pondérés.
+            </p>
+            <button
+              class="tp-button"
+              onclick="window.location.href='graphe.html'"
+            >
+              <span>Explorer</span>
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- TP2 - Structures arborescentes -->
+          <div class="tp-card">
+            <div class="tp-badge">2</div>
+            <div class="tp-icon">
+              <i class="fas fa-sitemap"></i>
+            </div>
+            <div class="tp-tags">
+              <span class="tp-tag">B-arbres</span>
+              <span class="tp-tag">B+</span>
+            </div>
+            <h3>Structures Arborescentes</h3>
+            <div class="tp-subtitle">B-arbres et variantes avancées</div>
+            <p class="tp-description">
+              Étude comparative des B-arbres et B-arbres+ avec visualisation
+              étape par étape des opérations fondamentales. Analyse des
+              performances.
+            </p>
+            <button
+              class="tp-button"
+              onclick="window.location.href='choix.html'"
+            >
+              <span>Découvrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- TP3 - Algorithmes de tri -->
+          <div class="tp-card">
+            <div class="tp-badge">3</div>
+            <div class="tp-icon">
+              <i class="fas fa-sort-amount-down"></i>
+            </div>
+            <div class="tp-tags">
+              <span class="tp-tag">Tri</span>
+              <span class="tp-tag">Comparaison</span>
+            </div>
+            <h3>Algorithmes de Tri</h3>
+            <div class="tp-subtitle">Analyse comparative et visualisation</div>
+            <p class="tp-description">
+              Plateforme interactive pour comparer les performances des
+              algorithmes de tri classiques. Visualisation en temps réel avec
+              analyse détaillée.
+            </p>
+            <button
+              class="tp-button"
+              onclick="window.location.href='arbre.html'"
+            >
+              <span>Comparer</span>
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- TP4 - Algorithmes avancés -->
+          <div class="tp-card">
+            <div class="tp-badge">4</div>
+            <div class="tp-icon">
+              <i class="fas fa-route"></i>
+            </div>
+            <div class="tp-tags">
+              <span class="tp-tag">Floyd-Warshall</span>
+              <span class="tp-tag">Welsh-Powell</span>
+            </div>
+            <h3>Algorithmes Avancés</h3>
+            <div class="tp-subtitle">Optimisation et problèmes complexes</div>
+            <p class="tp-description">
+              Implémentation des algorithmes de plus courts chemins et de
+              coloration de graphes. Résolution de problèmes d'optimisation
+              complexes.
+            </p>
+            <button
+              class="tp-button"
+              onclick="window.location.href='choixpccorcolor.html'"
+            >
+              <span>Résoudre</span>
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="page-footer">
+        <div class="footer-content">
+          <p>
+            © 2024 - Groupe 2 | Algorithmes Avancés | Université - École
+            d'Ingénieurs
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // Animation au chargement
+      document.addEventListener("DOMContentLoaded", function () {
+        // Animation des cartes TP
+        const tpCards = document.querySelectorAll(".tp-card");
+        tpCards.forEach((card, index) => {
+          card.style.opacity = "0";
+          card.style.transform = "translateY(30px)";
+
+          setTimeout(() => {
+            card.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+            card.style.opacity = "1";
+            card.style.transform = "translateY(0)";
+          }, index * 150);
+        });
+
+        // Animation des cartes info
+        const infoCards = document.querySelectorAll(".info-card");
+        infoCards.forEach((card, index) => {
+          card.style.opacity = "0";
+          card.style.transform = "translateY(20px)";
+
+          setTimeout(() => {
+            card.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+            card.style.opacity = "1";
+            card.style.transform = "translateY(0)";
+          }, tpCards.length * 150 + index * 100);
+        });
+
+        // Effet de survol amélioré pour les boutons
+        const buttons = document.querySelectorAll(".tp-button");
+        buttons.forEach((button) => {
+          button.addEventListener("mouseenter", function () {
+            this.style.transform = "translateY(-3px) scale(1.02)";
+          });
+
+          button.addEventListener("mouseleave", function () {
+            this.style.transform = "translateY(0) scale(1)";
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

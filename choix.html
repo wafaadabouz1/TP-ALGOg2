@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visualisation des B-arbres - TP</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: #333;
+      }
+
+      .main-container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* Header amélioré */
+      .hero-header {
+        text-align: center;
+        margin-bottom: 50px;
+        padding: 0 20px;
+      }
+
+      .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+        letter-spacing: -0.5px;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .hero-subtitle {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 600px;
+        margin: 0 auto 30px;
+        line-height: 1.6;
+        font-weight: 300;
+      }
+
+      .badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        color: white;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 30px;
+      }
+
+      /* Conteneur des choix */
+      .choices-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 30px;
+        padding: 20px;
+      }
+
+      /* Carte améliorée */
+      .tree-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 40px 30px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .tree-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+      }
+
+      .tree-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      }
+
+      /* Icone */
+      .card-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .card-icon i {
+        font-size: 36px;
+        color: white;
+      }
+
+      /* Titre de la carte */
+      .card-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 15px;
+        letter-spacing: -0.3px;
+      }
+
+      .card-subtitle {
+        font-size: 0.9rem;
+        color: #718096;
+        margin-bottom: 25px;
+        line-height: 1.6;
+        max-width: 320px;
+      }
+
+      /* Description */
+      .card-description {
+        font-size: 0.95rem;
+        color: #4a5568;
+        line-height: 1.7;
+        margin-bottom: 30px;
+        flex-grow: 1;
+      }
+
+      /* Caractéristiques */
+      .card-features {
+        text-align: left;
+        margin-bottom: 30px;
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+        color: #4a5568;
+      }
+
+      .feature-item i {
+        color: #667eea;
+        font-size: 0.8rem;
+      }
+
+      /* Bouton amélioré */
+      .card-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px 40px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        max-width: 250px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      .card-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.2),
+          rgba(255, 255, 255, 0)
+        );
+        transition: left 0.6s;
+        z-index: -1;
+      }
+
+      .card-button:hover::before {
+        left: 100%;
+      }
+
+      .card-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      }
+
+      .card-button i {
+        font-size: 1.2rem;
+        transition: transform 0.3s;
+      }
+
+      .card-button:hover i {
+        transform: translateX(5px);
+      }
+
+      /* Badge spécifique */
+      .tree-tag {
+        display: inline-block;
+        padding: 6px 15px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* Footer */
+      .page-footer {
+        text-align: center;
+        margin-top: 60px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        padding: 20px;
+      }
+
+      .footer-text {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 15px 30px;
+        border-radius: 12px;
+        display: inline-block;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .hero-title {
+          font-size: 2.5rem;
+        }
+
+        .hero-subtitle {
+          font-size: 1rem;
+        }
+
+        .choices-container {
+          grid-template-columns: 1fr;
+          padding: 10px;
+        }
+
+        .tree-card {
+          padding: 30px 20px;
+        }
+
+        .card-title {
+          font-size: 1.5rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero-title {
+          font-size: 2rem;
+        }
+
+        .choices-container {
+          gap: 20px;
+        }
+
+        .tree-card {
+          padding: 25px 15px;
+        }
+
+        .card-features {
+          max-width: 100%;
+        }
+      }
+    </style>
+    <!-- Font Awesome pour les icônes -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="main-container">
+      <!-- Header -->
+      <header class="hero-header">
+        <div class="badge">TP Algorithmes Avancés</div>
+        <h1 class="hero-title">Visualisation des B-arbres</h1>
+        <p class="hero-subtitle">
+          Explorez et comprenez les structures de données arborescentes grâce à
+          des visualisations interactives
+        </p>
+      </header>
+
+      <!-- Conteneur des choix -->
+      <div class="choices-container">
+        <!-- Carte B-arbre -->
+        <div class="tree-card">
+          <div class="tree-tag">Structure classique</div>
+          <div class="card-icon">
+            <i class="fas fa-sitemap"></i>
+          </div>
+          <h2 class="card-title">B-arbre</h2>
+          <div class="card-subtitle">
+            Structure équilibrée pour les systèmes de fichiers
+          </div>
+
+          <div class="card-features">
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Tous les nœuds contiennent des données</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Recherche séquentielle dans les nœuds</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Arbre équilibré automatiquement</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Utilisé dans les systèmes de fichiers</span>
+            </div>
+          </div>
+
+          <p class="card-description">
+            Structure de données arborescente équilibrée qui maintient ses
+            données triées et permet des recherches, insertions et suppressions
+            en temps logarithmique.
+          </p>
+          <a href="codecorrige.html" class="card-button">
+            <span>Explorer le B-arbre</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+
+        <!-- Carte B-arbre+ -->
+        <div class="tree-card">
+          <div class="tree-tag">Optimisé pour les bases de données</div>
+          <div class="card-icon">
+            <i class="fas fa-project-diagram"></i>
+          </div>
+          <h2 class="card-title">B-arbre+</h2>
+          <div class="card-subtitle">
+            Optimisation pour les bases de données
+          </div>
+
+          <div class="card-features">
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Données uniquement dans les feuilles</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Recherche plus rapide avec liens</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Meilleure performance en séquentiel</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Standard des bases de données</span>
+            </div>
+          </div>
+
+          <p class="card-description">
+            Variante du B-arbre où toutes les données sont stockées dans les
+            feuilles, optimisant les opérations de recherche séquentielle et
+            utilisée intensivement dans les SGBD.
+          </p>
+          <a href="arbre.html" class="card-button">
+            <span>Explorer le B-arbre+</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="page-footer">
+        <div class="footer-text">
+          <p>
+            Interface développée pour le TP d'Algorithmes Avancés - Structures
+            de données arborescentes
+          </p>
+          <p style="margin-top: 8px; font-size: 0.85rem; opacity: 0.8">
+            <i class="fas fa-code"></i> Développé avec HTML5, CSS3 & JavaScript
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // Animation au chargement
+      document.addEventListener("DOMContentLoaded", function () {
+        const cards = document.querySelectorAll(".tree-card");
+        cards.forEach((card, index) => {
+          card.style.opacity = "0";
+          card.style.transform = "translateY(30px)";
+
+          setTimeout(() => {
+            card.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+            card.style.opacity = "1";
+            card.style.transform = "translateY(0)";
+          }, index * 200);
+        });
+      });
+
+      // Effet de survol amélioré
+      const buttons = document.querySelectorAll(".card-button");
+      buttons.forEach((button) => {
+        button.addEventListener("mouseenter", function () {
+          this.style.transform = "translateY(-3px) scale(1.02)";
+        });
+
+        button.addEventListener("mouseleave", function () {
+          this.style.transform = "translateY(0) scale(1)";
+        });
+      });
+
+      // Effet de clic sur les cartes
+      const cards = document.querySelectorAll(".tree-card");
+      cards.forEach((card) => {
+        card.addEventListener("click", function (e) {
+          if (!e.target.classList.contains("card-button")) {
+            const link = this.querySelector(".card-button");
+            if (link) {
+              link.style.transform = "scale(0.95)";
+              setTimeout(() => {
+                link.style.transform = "";
+                window.location.href = link.href;
+              }, 150);
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

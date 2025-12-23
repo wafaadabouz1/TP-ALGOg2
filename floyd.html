@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Floyd-Warshall - Transformation Détaillée</title>
+    <link rel="stylesheet" href="floyd.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Configuration Panel -->
+      <div class="config-panel">
+        <h2 class="panel-title">Floyd-Warshall - Transformation Détaillée</h2>
+        <p class="panel-subtitle">
+          Observez chaque étape du changement de valeur : ancienne valeur →
+          calcul via pivot → comparaison → mise à jour.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Nombre de sommets (2-6)</label>
+          <input
+            type="number"
+            id="vertexCount"
+            class="form-control"
+            min="2"
+            max="6"
+            value="4"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Noms des sommets</label>
+          <input
+            type="text"
+            id="vertexLabels"
+            class="form-control"
+            value="A,B,C,D"
+            placeholder="Exemple: A,B,C,D"
+          />
+        </div>
+
+        <div class="btn-group">
+          <button id="applyConfig" class="btn btn-secondary">Appliquer</button>
+          <button id="loadExample" class="btn btn-secondary">Exemple</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Matrice d'adjacence</label>
+          <div class="matrix-input-section">
+            <table class="input-matrix" id="adjacencyMatrix">
+              <!-- Rempli dynamiquement -->
+            </table>
+            <div style="font-size: 12px; color: #6c757d; margin-top: 10px">
+              Entrez les poids. "inf" pour ∞ (pas de chemin direct). Diagonale
+              automatique à 0.
+            </div>
+          </div>
+        </div>
+
+        <button id="startAlgorithm" class="btn btn-success">
+          <span> Démarrer</span>
+        </button>
+      </div>
+
+      <!-- Animation Panel -->
+      <div class="animation-panel">
+        <div class="controls-section">
+          <div class="current-step-info">
+            <div class="step-badge" id="currentStepBadge">D⁰</div>
+            <div class="step-description" id="currentStepDesc">
+              Prêt à commencer
+            </div>
+          </div>
+
+          <div class="control-buttons">
+            <button id="prevStep" class="btn btn-secondary">⏮ Précédent</button>
+            <button id="playPause" class="btn btn-primary">▶ Lecture</button>
+            <button id="nextStep" class="btn btn-secondary">Suivant ⏭</button>
+            <button id="restart" class="btn btn-secondary">
+              ↺ Recommencer
+            </button>
+          </div>
+
+          <div class="speed-control">
+            <div class="speed-label">Vitesse :</div>
+            <input
+              type="range"
+              id="speedSlider"
+              class="speed-slider"
+              min="1000"
+              max="5000"
+              value="2500"
+              step="100"
+            />
+            <div class="speed-value" id="speedValue">2500ms</div>
+          </div>
+
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-color color-pivot"></div>
+              <span>Pivot (ligne + colonne)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color color-old"></div>
+              <span>Ancienne valeur</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color color-calc"></div>
+              <span>Calcul via pivot</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color color-updated"></div>
+              <span>Valeur mise à jour</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="animation-display" id="animationDisplay">
+          <div class="matrices-sequence" id="matricesSequence">
+            <div class="matrix-transformation-group">
+              <div class="matrix-header">
+                <div class="matrix-title">D⁰ - Matrice initiale</div>
+                <div class="matrix-status">Base pour D¹</div>
+              </div>
+              <div class="transformation-container current">
+                <div class="transformation-content">
+                  <div class="matrix-table-container">
+                    <table class="algorithm-matrix" id="initialMatrix">
+                      <!-- Rempli dynamiquement -->
+                    </table>
+                  </div>
+                  <div class="calculation-details">
+                    <div class="calculation-title">État actuel</div>
+                    <div class="calculation-text">
+                      Configurez la matrice à gauche et cliquez sur "Démarrer"
+                      pour voir chaque étape de transformation.
+                    </div>
+                    <div class="calculation-formula">
+                      <div class="formula-step active" id="formula-step-1">
+                        Algorithme : D<sup>k+1</sup>[i][j] =
+                        min(D<sup>k</sup>[i][j], D<sup>k</sup>[i][k] +
+                        D<sup>k</sup>[k][j])
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bouton pour afficher le graphe final -->
+          <div id="graphSection" style="display: none; margin-top: 20px">
+            <button id="showGraphBtn" class="btn btn-show-graph">
+              <span> Afficher le graphe final</span>
+            </button>
+            <div
+              id="graphContainer"
+              class="graph-container"
+              style="display: none"
+            >
+              <h3 class="graph-title">Visualisation du Graphe Final</h3>
+
+              <div class="graph-controls">
+                <button id="showAllPathsBtn" class="graph-control-btn active">
+                  Tous les chemins
+                </button>
+                <button id="showDirectPathsBtn" class="graph-control-btn">
+                  Chemins directs
+                </button>
+                <button id="showShortestPathsBtn" class="graph-control-btn">
+                  Chemins optimaux
+                </button>
+              </div>
+
+              <div class="graph-canvas-container">
+                <canvas id="graphCanvas" class="graph-canvas"></canvas>
+              </div>
+              <div class="graph-info">
+                <p>
+                  Ce graphe représente les distances finales entre tous les
+                  sommets après l'exécution de l'algorithme Floyd-Warshall.
+                </p>
+                <div class="graph-legend">
+                  <div class="graph-legend-item">
+                    <div class="graph-legend-color legend-node"></div>
+                    <span>Sommets</span>
+                  </div>
+                  <div class="graph-legend-item">
+                    <div
+                      class="graph-legend-color"
+                      style="background: #28a745"
+                    ></div>
+                    <span>Chemins directs</span>
+                  </div>
+                  <div class="graph-legend-item">
+                    <div
+                      class="graph-legend-color"
+                      style="background: #ffc107"
+                    ></div>
+                    <span>Chemins via pivots</span>
+                  </div>
+                  <div class="graph-legend-item">
+                    <div
+                      class="graph-legend-color"
+                      style="background: #dc3545"
+                    ></div>
+                    <span>Pas de chemin</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-indicator" id="progressIndicator">
+            <!-- Indicateurs de progression -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const INF = 99999;
+      let n = 4;
+      let labels = ["A", "B", "C", "D"];
+      let baseMatrix = [];
+      let speed = 2500; // Plus lent pour voir les étapes
+      let isPlaying = false;
+      let currentMatrixIndex = 0;
+      let currentOperationIndex = 0;
+      let animationData = [];
+      let animationInterval = null;
+      let finalMatrix = null;
+      let graphViewMode = "all"; // 'all', 'direct', 'shortest'
+      let hasNegativeCycle = false;
+
+      // Éléments DOM
+      const elements = {
+        vertexCount: document.getElementById("vertexCount"),
+        vertexLabels: document.getElementById("vertexLabels"),
+        applyConfig: document.getElementById("applyConfig"),
+        loadExample: document.getElementById("loadExample"),
+        startAlgorithm: document.getElementById("startAlgorithm"),
+        prevStep: document.getElementById("prevStep"),
+        playPause: document.getElementById("playPause"),
+        nextStep: document.getElementById("nextStep"),
+        restart: document.getElementById("restart"),
+        speedSlider: document.getElementById("speedSlider"),
+        speedValue: document.getElementById("speedValue"),
+        currentStepBadge: document.getElementById("currentStepBadge"),
+        currentStepDesc: document.getElementById("currentStepDesc"),
+        animationDisplay: document.getElementById("animationDisplay"),
+        matricesSequence: document.getElementById("matricesSequence"),
+        progressIndicator: document.getElementById("progressIndicator"),
+        adjacencyMatrix: document.getElementById("adjacencyMatrix"),
+        graphSection: document.getElementById("graphSection"),
+        showGraphBtn: document.getElementById("showGraphBtn"),
+        graphContainer: document.getElementById("graphContainer"),
+        graphCanvas: document.getElementById("graphCanvas"),
+        showAllPathsBtn: document.getElementById("showAllPathsBtn"),
+        showDirectPathsBtn: document.getElementById("showDirectPathsBtn"),
+        showShortestPathsBtn: document.getElementById("showShortestPathsBtn"),
+      };
+
+      // Initialisation
+      function init() {
+        createEmptyMatrix();
+        renderMatrixInput();
+        updateControls();
+        renderInitialMatrix();
+
+        // Ajouter les événements
+        elements.showGraphBtn.addEventListener("click", showFinalGraph);
+        elements.showAllPathsBtn.addEventListener("click", () =>
+          changeGraphView("all")
+        );
+        elements.showDirectPathsBtn.addEventListener("click", () =>
+          changeGraphView("direct")
+        );
+        elements.showShortestPathsBtn.addEventListener("click", () =>
+          changeGraphView("shortest")
+        );
+      }
+
+      function createEmptyMatrix() {
+        baseMatrix = Array(n)
+          .fill()
+          .map(() => Array(n).fill(INF));
+        for (let i = 0; i < n; i++) {
+          baseMatrix[i][i] = 0;
+        }
+      }
+
+      function renderMatrixInput() {
+        let html = "<thead><tr><th></th>";
+        for (let i = 0; i < n; i++) {
+          html += `<th>${labels[i]}</th>`;
+        }
+        html += "</tr></thead><tbody>";
+
+        for (let i = 0; i < n; i++) {
+          html += `<tr><th>${labels[i]}</th>`;
+          for (let j = 0; j < n; j++) {
+            const value = baseMatrix[i][j];
+            const displayValue = value === INF ? "inf" : i === j ? "0" : "";
+            html += `<td>
+                        <input type="text" 
+                               data-i="${i}" 
+                               data-j="${j}" 
+                               value="${displayValue}" 
+                               placeholder="${i === j ? "0" : "inf"}">
+                    </td>`;
+          }
+          html += "</tr>";
+        }
+        html += "</tbody>";
+
+        elements.adjacencyMatrix.innerHTML = html;
+
+        elements.adjacencyMatrix.querySelectorAll("input").forEach((input) => {
+          input.addEventListener("change", handleMatrixInputChange);
+        });
+      }
+
+      function handleMatrixInputChange(e) {
+        const i = parseInt(e.target.dataset.i);
+        const j = parseInt(e.target.dataset.j);
+        let value = e.target.value.trim();
+
+        if (value === "" || value.toLowerCase() === "inf") {
+          baseMatrix[i][j] = INF;
+          e.target.value = "inf";
+        } else {
+          value = parseInt(value);
+          if (!isNaN(value)) {
+            baseMatrix[i][j] = value;
+          }
+        }
+
+        if (i === j) {
+          baseMatrix[i][j] = 0;
+          e.target.value = "0";
+        }
+      }
+
+      function formatValue(value) {
+        return value >= INF ? "∞" : value.toString();
+      }
+
+      function renderInitialMatrix() {
+        const matrixContainer = document.querySelector(
+          ".matrix-table-container"
+        );
+
+        let html = '<table class="algorithm-matrix"><thead><tr><th></th>';
+        for (let i = 0; i < n; i++) {
+          html += `<th>${labels[i]}</th>`;
+        }
+        html += "</tr></thead><tbody>";
+
+        for (let i = 0; i < n; i++) {
+          html += `<tr><th>${labels[i]}</th>`;
+          for (let j = 0; j < n; j++) {
+            const value = baseMatrix[i][j];
+            const cellClass = i === j ? "cell-diagonal" : "";
+            html += `<td class="${cellClass}">
+                        <span class="cell-value">${formatValue(value)}</span>
+                    </td>`;
+          }
+          html += "</tr>";
+        }
+        html += "</tbody></table>";
+
+        matrixContainer.innerHTML = html;
+      }
+
+      // Fonction pour générer une matrice aléatoire
+      function generateRandomMatrix() {
+        // Réinitialiser la matrice
+        createEmptyMatrix();
+
+        // Pour chaque paire (i, j)
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            if (i !== j) {
+              // 40% de chance d'avoir une arête directe
+              if (Math.random() < 0.4) {
+                // Poids aléatoire entre 1 et 10
+                baseMatrix[i][j] = Math.floor(Math.random() * 10) + 1;
+              }
+              // 10% de chance d'avoir un poids négatif (pour tester les cycles)
+              if (Math.random() < 0.1) {
+                // Poids négatif aléatoire entre -5 et -1
+                baseMatrix[i][j] = -(Math.floor(Math.random() * 5) + 1);
+              }
+            }
+          }
+        }
+
+        // Mettre à jour l'affichage
+        renderMatrixInput();
+        resetAlgorithm();
+        renderInitialMatrix();
+      }
+
+      // Configuration
+      elements.applyConfig.addEventListener("click", () => {
+        n = parseInt(elements.vertexCount.value);
+        if (n < 2) n = 2;
+        if (n > 6) n = 6;
+
+        const labelsText = elements.vertexLabels.value;
+        const inputLabels = labelsText
+          .split(",")
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
+
+        if (inputLabels.length >= n) {
+          labels = inputLabels.slice(0, n);
+        } else {
+          labels = [];
+          for (let i = 0; i < n; i++) {
+            if (i < inputLabels.length) {
+              labels.push(inputLabels[i]);
+            } else {
+              labels.push(String.fromCharCode(65 + i));
+            }
+          }
+        }
+
+        elements.vertexLabels.value = labels.join(",");
+        createEmptyMatrix();
+        renderMatrixInput();
+        resetAlgorithm();
+        renderInitialMatrix();
+      });
+
+      elements.loadExample.addEventListener("click", () => {
+        // Au lieu d'un exemple fixe, on génère une matrice aléatoire
+        generateRandomMatrix();
+
+        // Afficher un message informatif
+        alert(
+          "Matrice aléatoire générée ! Cliquez sur Démarrer pour lancer l'algorithme."
+        );
+      });
+
+      elements.speedSlider.addEventListener("input", (e) => {
+        speed = parseInt(e.target.value);
+        elements.speedValue.textContent = `${speed}ms`;
+
+        if (isPlaying && animationInterval) {
+          clearInterval(animationInterval);
+          startAnimation();
+        }
+      });
+
+      function resetAlgorithm() {
+        isPlaying = false;
+        currentMatrixIndex = 0;
+        currentOperationIndex = 0;
+        animationData = [];
+        finalMatrix = null;
+        hasNegativeCycle = false;
+
+        // Masquer la section du graphe
+        elements.graphSection.style.display = "none";
+        elements.graphContainer.style.display = "none";
+
+        if (animationInterval) {
+          clearInterval(animationInterval);
+          animationInterval = null;
+        }
+
+        updateControls();
+        updateProgressIndicator();
+
+        // Réinitialiser l'affichage
+        const matrixGroups = document.querySelectorAll(
+          ".matrix-transformation-group"
+        );
+        matrixGroups.forEach((group, idx) => {
+          if (idx > 0) group.remove();
+        });
+
+        const firstGroup = document.querySelector(
+          ".matrix-transformation-group"
+        );
+        if (firstGroup) {
+          firstGroup.querySelector(".matrix-title").textContent =
+            "D⁰ - Matrice initiale";
+          firstGroup.querySelector(".matrix-status").textContent =
+            "Base pour D¹";
+          firstGroup.querySelector(".transformation-container").className =
+            "transformation-container current";
+        }
+
+        elements.currentStepBadge.textContent = "D⁰";
+        elements.currentStepDesc.textContent = "Prêt à commencer";
+      }
+
+      function updateControls() {
+        elements.playPause.textContent = isPlaying ? "⏸ Pause" : "▶ Lecture";
+        elements.playPause.className = isPlaying
+          ? "btn btn-secondary"
+          : "btn btn-primary";
+        elements.prevStep.disabled =
+          currentMatrixIndex === 0 && currentOperationIndex === 0;
+        elements.nextStep.disabled =
+          currentMatrixIndex >= animationData.length - 1 &&
+          currentOperationIndex >=
+            (animationData[currentMatrixIndex]?.operations?.length || 0);
+        elements.playPause.disabled = animationData.length === 0;
+        elements.restart.disabled = animationData.length === 0;
+      }
+
+      // Préparation des données d'animation - Transformation DÉTAILLÉE avec détection de cycles négatifs
+      function prepareAlgorithm() {
+        animationData = [];
+        hasNegativeCycle = false;
+        let currentMatrix = baseMatrix.map((row) => [...row]);
+
+        // D⁰ - Matrice initiale
+        animationData.push({
+          matrix: currentMatrix.map((row) => [...row]),
+          title: "D⁰",
+          description: "Matrice initiale - Base pour D¹",
+          operations: [],
+          pivot: null,
+          isSource: true,
+        });
+
+        // Pour chaque pivot k
+        for (let k = 0; k < n; k++) {
+          const operations = [];
+          const newMatrix = currentMatrix.map((row) => [...row]);
+
+          // Pour chaque paire (i, j) - INCLUANT i = j POUR DÉTECTER LES CYCLES
+          for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+              // NE PAS sauter i = j - cela nous permet de détecter les cycles
+              if (i === k || j === k) continue;
+
+              const oldValue = currentMatrix[i][j];
+              const dik = currentMatrix[i][k];
+              const dkj = currentMatrix[k][j];
+
+              if (dik < INF && dkj < INF) {
+                const sum = dik + dkj;
+
+                // Pour i = j, on doit permettre de voir si le chemin vers soi-même devient négatif
+                if (i === j) {
+                  // C'est un cas spécial pour détecter les cycles négatifs
+                  if (sum < 0) {
+                    // CYCLE NÉGATIF DÉTECTÉ !
+                    // Ajouter l'opération de calcul
+                    operations.push({
+                      type: "negative_cycle_detected",
+                      i,
+                      j,
+                      k,
+                      dik,
+                      dkj,
+                      sum,
+                      oldValue,
+                      description: `CYCLE NÉGATIF DÉTECTÉ ! Chemin de ${
+                        labels[i]
+                      } vers ${labels[i]} via ${labels[k]} : ${formatValue(
+                        dik
+                      )} + ${formatValue(dkj)} = ${formatValue(sum)} < 0`,
+                      hasNegativeCycle: true,
+                    });
+
+                    // Mettre à jour la matrice
+                    newMatrix[i][j] = sum;
+
+                    // Ajouter une étape spéciale pour indiquer le cycle négatif
+                    animationData.push({
+                      matrix: newMatrix.map((row) => [...row]),
+                      title: `D${k + 1}`,
+                      description: `CYCLE NÉGATIF DÉTECTÉ à l'itération ${
+                        k + 1
+                      }`,
+                      operations: operations,
+                      pivot: k,
+                      hasNegativeCycle: true,
+                      negativeCycleMessage: `Il y a un cycle négatif ! Chemin de ${labels[i]} vers ${labels[i]} = ${sum} < 0`,
+                      isFinal: true,
+                    });
+
+                    // Marquer que nous avons un cycle négatif
+                    hasNegativeCycle = true;
+                    finalMatrix = newMatrix;
+                    return;
+                  }
+                  // Sinon, continuer normalement mais ne pas mettre à jour la diagonale
+                  continue;
+                }
+
+                // Étape 1: Montrer l'ancienne valeur
+                operations.push({
+                  type: "show_old",
+                  i,
+                  j,
+                  k,
+                  oldValue,
+                  description: `Ancienne valeur dans ${
+                    currentMatrixIndex === 0 ? "D⁰" : "D" + k
+                  } : D[${labels[i]}][${labels[j]}] = ${formatValue(oldValue)}`,
+                });
+
+                // Étape 2: Montrer le calcul via le pivot
+                operations.push({
+                  type: "show_calculation",
+                  i,
+                  j,
+                  k,
+                  dik,
+                  dkj,
+                  sum,
+                  description: `Calcul via pivot ${labels[k]} : D[${
+                    labels[i]
+                  }][${labels[k]}] + D[${labels[k]}][${
+                    labels[j]
+                  }] = ${formatValue(dik)} + ${formatValue(
+                    dkj
+                  )} = ${formatValue(sum)}`,
+                });
+
+                // Étape 3: Comparaison
+                operations.push({
+                  type: "compare",
+                  i,
+                  j,
+                  k,
+                  oldValue,
+                  sum,
+                  description: `Comparaison : ${formatValue(
+                    oldValue
+                  )} vs ${formatValue(sum)}`,
+                });
+
+                if (sum < oldValue) {
+                  newMatrix[i][j] = sum;
+
+                  // Étape 4: Mise à jour
+                  operations.push({
+                    type: "update",
+                    i,
+                    j,
+                    k,
+                    oldValue,
+                    newValue: sum,
+                    description: `Nouveau chemin plus court ! ${formatValue(
+                      oldValue
+                    )} → ${formatValue(sum)}`,
+                  });
+
+                  // Étape 5: Valeur finale
+                  operations.push({
+                    type: "updated",
+                    i,
+                    j,
+                    k,
+                    newValue: sum,
+                    description: `Valeur mise à jour dans D${k + 1} : D[${
+                      labels[i]
+                    }][${labels[j]}] = ${formatValue(sum)}`,
+                  });
+                } else {
+                  // Pas de changement
+                  operations.push({
+                    type: "no_change",
+                    i,
+                    j,
+                    k,
+                    oldValue,
+                    description: `Pas de changement : ${formatValue(
+                      oldValue
+                    )} ≤ ${formatValue(sum)}`,
+                  });
+                }
+              } else {
+                // Chemin impossible via le pivot
+                operations.push({
+                  type: "impossible",
+                  i,
+                  j,
+                  k,
+                  description: `Chemin impossible via ${labels[k]} (∞ dans le calcul)`,
+                });
+              }
+            }
+          }
+
+          // VÉRIFICATION ADDITIONNELLE POUR LES CYCLES NÉGATIFS
+          // Après avoir traité toutes les paires, vérifier s'il existe un chemin i->i négatif
+          for (let i = 0; i < n; i++) {
+            if (newMatrix[i][i] < 0) {
+              // Cycle négatif détecté !
+              operations.push({
+                type: "negative_cycle_detected_final",
+                i,
+                description: `CYCLE NÉGATIF DÉTECTÉ ! D[${labels[i]}][${labels[i]}] = ${newMatrix[i][i]} < 0`,
+                hasNegativeCycle: true,
+              });
+
+              // Ajouter une étape spéciale pour indiquer le cycle négatif
+              animationData.push({
+                matrix: newMatrix.map((row) => [...row]),
+                title: `D${k + 1}`,
+                description: `CYCLE NÉGATIF DÉTECTÉ à l'itération ${k + 1}`,
+                operations: operations,
+                pivot: k,
+                hasNegativeCycle: true,
+                negativeCycleMessage: `Il y a un cycle négatif ! D[${labels[i]}][${labels[i]}] = ${newMatrix[i][i]} < 0`,
+                isFinal: true,
+              });
+
+              // Marquer que nous avons un cycle négatif
+              hasNegativeCycle = true;
+              finalMatrix = newMatrix;
+              return;
+            }
+          }
+
+          // Stocker la transformation normale
+          animationData.push({
+            matrix: newMatrix.map((row) => [...row]),
+            title: `D${k + 1}`,
+            description: k < n - 1 ? `Base pour D${k + 2}` : "Matrice finale",
+            operations: operations,
+            pivot: k,
+            isFinal: k === n - 1,
+            sourceMatrix: currentMatrix.map((row) => [...row]),
+            hasNegativeCycle: false,
+          });
+
+          // La nouvelle matrice devient la matrice courante pour l'itération suivante
+          currentMatrix = newMatrix;
+        }
+
+        // VÉRIFICATION FINALE POUR LES CYCLES NÉGATIFS
+        // Après toutes les itérations, vérifier à nouveau
+        for (let i = 0; i < n; i++) {
+          if (currentMatrix[i][i] < 0) {
+            // Ajouter une opération finale de détection
+            const lastAnimation = animationData[animationData.length - 1];
+            lastAnimation.operations.push({
+              type: "negative_cycle_detected_final",
+              i,
+              description: `CYCLE NÉGATIF DÉTECTÉ ! D[${labels[i]}][${labels[i]}] = ${currentMatrix[i][i]} < 0`,
+              hasNegativeCycle: true,
+            });
+
+            lastAnimation.hasNegativeCycle = true;
+            lastAnimation.negativeCycleMessage = `Il y a un cycle négatif ! D[${labels[i]}][${labels[i]}] = ${currentMatrix[i][i]} < 0`;
+            hasNegativeCycle = true;
+            break;
+          }
+        }
+
+        // Stocker la matrice finale
+        finalMatrix = currentMatrix;
+      }
+
+      function showCurrentStep() {
+        if (animationData.length === 0) {
+          elements.currentStepBadge.textContent = "D⁰";
+          elements.currentStepDesc.textContent = "Prêt à commencer";
+          return;
+        }
+
+        const matrixInfo = animationData[currentMatrixIndex];
+        const currentOperation =
+          currentOperationIndex < matrixInfo.operations.length
+            ? matrixInfo.operations[currentOperationIndex]
+            : null;
+
+        // Vérifier si on a détecté un cycle négatif
+        if (matrixInfo.hasNegativeCycle) {
+          // Afficher le message d'erreur
+          elements.currentStepBadge.textContent = "⚠️";
+          elements.currentStepDesc.textContent =
+            matrixInfo.negativeCycleMessage || "Il y a un cycle négatif !";
+
+          // Arrêter l'animation immédiatement
+          if (isPlaying && animationInterval) {
+            clearInterval(animationInterval);
+            animationInterval = null;
+            isPlaying = false;
+          }
+
+          // Désactiver les contrôles
+          elements.playPause.disabled = true;
+          elements.nextStep.disabled = true;
+          elements.startAlgorithm.disabled = true;
+        } else {
+          // Comportement normal
+          elements.currentStepBadge.textContent = matrixInfo.title;
+          if (currentOperation) {
+            elements.currentStepDesc.textContent = currentOperation.description;
+          } else {
+            elements.currentStepDesc.textContent = matrixInfo.description;
+          }
+        }
+
+        // Afficher toutes les transformations jusqu'à l'actuelle
+        renderAllTransformations();
+
+        // Mettre à jour les indicateurs de progression
+        updateProgressIndicator();
+        updateControls();
+
+        // Scroll vers la transformation courante
+        const transformations = document.querySelectorAll(
+          ".matrix-transformation-group"
+        );
+        if (transformations[currentMatrixIndex]) {
+          setTimeout(() => {
+            transformations[currentMatrixIndex].scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }, 100);
+        }
+
+        // Afficher le bouton pour le graphe final si on est à la fin et pas de cycle négatif
+        if (
+          currentMatrixIndex === animationData.length - 1 &&
+          currentOperationIndex === matrixInfo.operations.length &&
+          !matrixInfo.hasNegativeCycle
+        ) {
+          elements.graphSection.style.display = "block";
+        }
+      }
+
+      function renderAllTransformations() {
+        // Garder seulement les transformations jusqu'à currentMatrixIndex
+        const existingGroups = document.querySelectorAll(
+          ".matrix-transformation-group"
+        );
+
+        // Supprimer les groupes en trop
+        for (let i = existingGroups.length - 1; i > currentMatrixIndex; i--) {
+          existingGroups[i].remove();
+        }
+
+        // Ajouter les groupes manquants
+        for (
+          let idx = existingGroups.length;
+          idx <= currentMatrixIndex;
+          idx++
+        ) {
+          const matrixInfo = animationData[idx];
+          createTransformationGroup(matrixInfo, idx);
+        }
+
+        // Mettre à jour tous les groupes
+        document
+          .querySelectorAll(".matrix-transformation-group")
+          .forEach((group, idx) => {
+            const matrixInfo = animationData[idx];
+            const isCurrent = idx === currentMatrixIndex;
+            const isCompleted = idx < currentMatrixIndex;
+
+            // Mettre à jour l'en-tête
+            const header = group.querySelector(".matrix-header");
+
+            if (matrixInfo.hasNegativeCycle) {
+              header.querySelector(
+                ".matrix-title"
+              ).textContent = `⚠️ ${matrixInfo.title} - CYCLE NÉGATIF`;
+              header.querySelector(".matrix-status").textContent =
+                "Algorithme arrêté";
+            } else {
+              header.querySelector(".matrix-title").textContent = `${
+                matrixInfo.title
+              }${
+                matrixInfo.pivot !== null
+                  ? ` - Après pivot ${labels[matrixInfo.pivot]}`
+                  : " - Matrice initiale"
+              }`;
+
+              header.querySelector(".matrix-status").textContent =
+                matrixInfo.isFinal
+                  ? "Matrice finale"
+                  : matrixInfo.pivot !== null
+                  ? `Base pour D${matrixInfo.pivot + 2}`
+                  : "Base pour D¹";
+            }
+
+            // Mettre à jour le contenu
+            const container = group.querySelector(".transformation-container");
+            container.className = `transformation-container ${
+              isCurrent ? "current" : ""
+            } ${isCompleted ? "completed" : ""} ${
+              matrixInfo.hasNegativeCycle ? "negative-cycle-container" : ""
+            }`;
+
+            // Si c'est la matrice courante et qu'il y a une opération en cours
+            if (
+              isCurrent &&
+              currentOperationIndex < matrixInfo.operations.length
+            ) {
+              const operation = matrixInfo.operations[currentOperationIndex];
+              updateMatrixWithOperation(group, matrixInfo, operation);
+            } else {
+              updateStaticMatrix(group, matrixInfo);
+            }
+          });
+      }
+
+      function createTransformationGroup(matrixInfo, index) {
+        const group = document.createElement("div");
+        group.className = "matrix-transformation-group";
+
+        group.innerHTML = `
+                <div class="matrix-header">
+                    <div class="matrix-title">${
+                      matrixInfo.hasNegativeCycle
+                        ? `⚠️ ${matrixInfo.title} - CYCLE NÉGATIF`
+                        : `${matrixInfo.title}${
+                            matrixInfo.pivot !== null
+                              ? ` - Après pivot ${labels[matrixInfo.pivot]}`
+                              : " - Matrice initiale"
+                          }`
+                    }</div>
+                    <div class="matrix-status">${
+                      matrixInfo.hasNegativeCycle
+                        ? "Algorithme arrêté"
+                        : matrixInfo.isFinal
+                        ? "Matrice finale"
+                        : matrixInfo.pivot !== null
+                        ? `Base pour D${matrixInfo.pivot + 2}`
+                        : "Base pour D¹"
+                    }</div>
+                </div>
+                <div class="transformation-container ${
+                  index === currentMatrixIndex ? "current" : ""
+                } ${
+          matrixInfo.hasNegativeCycle ? "negative-cycle-container" : ""
+        }">
+                    <div class="transformation-content">
+                        <div class="matrix-table-container">
+                            <table class="algorithm-matrix">
+                                <!-- Rempli dynamiquement -->
+                            </table>
+                        </div>
+                        <div class="calculation-details">
+                            <div class="calculation-title">${
+                              matrixInfo.hasNegativeCycle
+                                ? "⚠️ CYCLE NÉGATIF DÉTECTÉ"
+                                : matrixInfo.pivot !== null
+                                ? `Transformation ${matrixInfo.title}`
+                                : "Matrice initiale"
+                            }</div>
+                            <div class="calculation-text">
+                                ${
+                                  matrixInfo.hasNegativeCycle
+                                    ? "Un cycle négatif a été détecté, l'algorithme s'arrête."
+                                    : matrixInfo.pivot !== null
+                                    ? `Calcul des chemins passant par ${
+                                        labels[matrixInfo.pivot]
+                                      } pour obtenir ${matrixInfo.title}`
+                                    : "Distances initiales entre les sommets"
+                                }
+                            </div>
+                            <div class="calculation-formula">
+                                <div class="formula-step active" id="formula-step-1">
+                                    ${
+                                      matrixInfo.hasNegativeCycle
+                                        ? "Détection : D[i][i] < 0 indique un cycle négatif"
+                                        : "Algorithme : D<sup>k+1</sup>[i][j] = min(D<sup>k</sup>[i][j], D<sup>k</sup>[i][k] + D<sup>k</sup>[k][j])"
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        // Ajouter une flèche entre les matrices (sauf pour la première)
+        if (index > 0) {
+          const arrow = document.createElement("div");
+          arrow.className = "transformation-arrow";
+          arrow.textContent = "↓ Transformation via pivot →";
+          elements.matricesSequence.appendChild(arrow);
+        }
+
+        elements.matricesSequence.appendChild(group);
+      }
+
+      function updateStaticMatrix(group, matrixInfo) {
+        const tableContainer = group.querySelector(".matrix-table-container");
+        const calculationDetails = group.querySelector(".calculation-details");
+
+        let tableHTML = '<table class="algorithm-matrix"><thead><tr><th></th>';
+        for (let i = 0; i < n; i++) {
+          tableHTML += `<th>${labels[i]}</th>`;
+        }
+        tableHTML += "</tr></thead><tbody>";
+
+        for (let i = 0; i < n; i++) {
+          const isPivotRow =
+            matrixInfo.pivot !== null && i === matrixInfo.pivot;
+          tableHTML += `<tr${isPivotRow ? ' class="pivot-row"' : ""}><th${
+            isPivotRow ? ' class="pivot-row"' : ""
+          }>${labels[i]}</th>`;
+
+          for (let j = 0; j < n; j++) {
+            const isPivotCol =
+              matrixInfo.pivot !== null && j === matrixInfo.pivot;
+            const isPivotIntersection = isPivotRow && isPivotCol;
+            const isDiagonal = i === j;
+
+            let cellClass = "";
+            if (isPivotIntersection) {
+              cellClass = "pivot-intersection";
+            } else if (isPivotRow) {
+              cellClass = "pivot-row";
+            } else if (isPivotCol) {
+              cellClass = "pivot-col";
+            }
+
+            if (isDiagonal) {
+              cellClass += " cell-diagonal";
+              // Si c'est un cycle négatif et que la valeur est négative
+              if (matrixInfo.hasNegativeCycle && matrixInfo.matrix[i][j] < 0) {
+                cellClass += " negative-cycle";
+              }
+            }
+
+            const value = matrixInfo.matrix[i][j];
+            tableHTML += `<td class="${cellClass.trim()}">
+                        <span class="cell-value">${formatValue(value)}</span>
+                    </td>`;
+          }
+          tableHTML += "</tr>";
+        }
+        tableHTML += "</tbody></table>";
+
+        tableContainer.innerHTML = tableHTML;
+
+        // Mettre à jour les détails de calcul
+        calculationDetails.innerHTML = `
+                <div class="calculation-title">${
+                  matrixInfo.hasNegativeCycle
+                    ? "⚠️ CYCLE NÉGATIF DÉTECTÉ"
+                    : matrixInfo.pivot !== null
+                    ? `Transformation ${matrixInfo.title}`
+                    : "Matrice initiale"
+                }</div>
+                <div class="calculation-text">
+                    ${
+                      matrixInfo.hasNegativeCycle
+                        ? matrixInfo.negativeCycleMessage ||
+                          "Il y a un cycle négatif !"
+                        : matrixInfo.pivot !== null
+                        ? `Matrice ${
+                            matrixInfo.title
+                          } obtenue en traitant le pivot ${
+                            labels[matrixInfo.pivot]
+                          }.`
+                        : "Distances initiales entre les sommets."
+                    }
+                </div>
+                <div class="calculation-formula">
+                    <div class="formula-step active" id="formula-step-1">
+                        ${
+                          matrixInfo.hasNegativeCycle
+                            ? `Détection : D[${labels.findIndex(
+                                (_, idx) => matrixInfo.matrix[idx][idx] < 0
+                              )}][${labels.findIndex(
+                                (_, idx) => matrixInfo.matrix[idx][idx] < 0
+                              )}] < 0`
+                            : matrixInfo.pivot !== null
+                            ? `Formule : ${
+                                matrixInfo.title
+                              }[i][j] = min(${matrixInfo.title.replace(
+                                "D",
+                                "D"
+                              )}[i][j], ${matrixInfo.title.replace(
+                                "D",
+                                "D"
+                              )}[i][${
+                                labels[matrixInfo.pivot]
+                              }] + ${matrixInfo.title.replace("D", "D")}[${
+                                labels[matrixInfo.pivot]
+                              }][j])`
+                            : "Base pour le calcul des plus courts chemins"
+                        }
+                    </div>
+                </div>
+            `;
+      }
+
+      function updateMatrixWithOperation(group, matrixInfo, operation) {
+        const tableContainer = group.querySelector(".matrix-table-container");
+        const calculationDetails = group.querySelector(".calculation-details");
+
+        // Si c'est une opération de détection de cycle négatif
+        if (
+          operation.type === "negative_cycle_detected" ||
+          operation.type === "negative_cycle_detected_final"
+        ) {
+          calculationDetails.innerHTML = `
+            <div class="calculation-title" style="color: #dc3545; font-weight: bold;">⚠️ CYCLE NÉGATIF DÉTECTÉ</div>
+            <div class="calculation-text" style="color: #dc3545; font-weight: bold;">${
+              operation.description
+            }</div>
+            <div class="calculation-formula">
+                <div class="formula-step active" id="formula-step-error">
+                    <span style="color: #dc3545; font-weight: 700;">L'algorithme s'arrête !</span>
+                </div>
+                <div class="formula-step active" id="formula-step-error2">
+                    <span style="color: #dc3545;">Un chemin d'un sommet vers lui-même est négatif, indiquant un cycle de poids négatif.</span>
+                </div>
+                ${
+                  operation.type === "negative_cycle_detected" &&
+                  operation.dik !== undefined
+                    ? `<div class="formula-step active" id="formula-step-error3">
+                        <span style="color: #dc3545;">Chemin détecté : ${
+                          labels[operation.i]
+                        } → ${labels[operation.k]} → ${
+                        labels[operation.i]
+                      }</span>
+                       </div>
+                       <div class="formula-step active" id="formula-step-error4">
+                        <span style="color: #dc3545;">Calcul : ${formatValue(
+                          operation.dik
+                        )} + ${formatValue(operation.dkj)} = ${formatValue(
+                        operation.sum
+                      )} < 0</span>
+                       </div>`
+                    : ""
+                }
+            </div>
+          `;
+
+          // Créer le tableau avec mise en évidence des diagonales négatives
+          let tableHTML =
+            '<table class="algorithm-matrix"><thead><tr><th></th>';
+          for (let i = 0; i < n; i++) {
+            tableHTML += `<th>${labels[i]}</th>`;
+          }
+          tableHTML += "</tr></thead><tbody>";
+
+          for (let i = 0; i < n; i++) {
+            tableHTML += `<tr><th>${labels[i]}</th>`;
+            for (let j = 0; j < n; j++) {
+              const isDiagonal = i === j;
+              const value = matrixInfo.matrix[i][j];
+
+              let cellClass = "";
+              if (isDiagonal) {
+                cellClass = "cell-diagonal";
+                // Si la valeur diagonale est négative, la mettre en évidence
+                if (value < 0) {
+                  cellClass += " negative-cycle";
+                }
+              }
+
+              // Mettre en évidence les cellules impliquées dans la détection
+              if (
+                operation.type === "negative_cycle_detected" &&
+                ((i === operation.i && j === operation.k) ||
+                  (i === operation.k && j === operation.i))
+              ) {
+                cellClass += " negative-cycle-source";
+              }
+
+              tableHTML += `<td class="${cellClass.trim()}">
+                          <span class="cell-value">${formatValue(value)}</span>
+                      </td>`;
+            }
+            tableHTML += "</tr>";
+          }
+          tableHTML += "</tbody></table>";
+
+          tableContainer.innerHTML = tableHTML;
+          return;
+        }
+
+        let tableHTML = '<table class="algorithm-matrix"><thead><tr><th></th>';
+        for (let i = 0; i < n; i++) {
+          tableHTML += `<th>${labels[i]}</th>`;
+        }
+        tableHTML += "</tr></thead><tbody>";
+
+        for (let i = 0; i < n; i++) {
+          const isPivotRow =
+            matrixInfo.pivot !== null && i === matrixInfo.pivot;
+          tableHTML += `<tr${isPivotRow ? ' class="pivot-row"' : ""}><th${
+            isPivotRow ? ' class="pivot-row"' : ""
+          }>${labels[i]}</th>`;
+
+          for (let j = 0; j < n; j++) {
+            const isPivotCol =
+              matrixInfo.pivot !== null && j === matrixInfo.pivot;
+            const isPivotIntersection = isPivotRow && isPivotCol;
+            const isDiagonal = i === j;
+
+            let cellClass = "";
+            if (isPivotIntersection) {
+              cellClass = "pivot-intersection";
+            } else if (isPivotRow) {
+              cellClass = "pivot-row";
+            } else if (isPivotCol) {
+              cellClass = "pivot-col";
+            }
+
+            if (isDiagonal) {
+              cellClass += " cell-diagonal";
+            }
+
+            // Mettre en surbrillance selon l'opération
+            const isTargetCell = i === operation.i && j === operation.j;
+            const isSourceCell1 = i === operation.i && j === operation.k;
+            const isSourceCell2 = i === operation.k && j === operation.j;
+
+            if (isTargetCell) {
+              if (operation.type === "show_old") {
+                cellClass += " cell-showing-old";
+              } else if (operation.type === "show_calculation") {
+                cellClass += " cell-showing-calculation";
+              } else if (operation.type === "compare") {
+                cellClass += " cell-comparing";
+              } else if (operation.type === "update") {
+                cellClass += " cell-updating";
+              } else if (operation.type === "updated") {
+                cellClass += " cell-updated";
+              }
+            } else if (isSourceCell1 || isSourceCell2) {
+              if (
+                operation.type === "show_calculation" ||
+                operation.type === "compare"
+              ) {
+                cellClass += " cell-showing-calculation";
+              }
+            }
+
+            let cellContent = "";
+            const currentValue = matrixInfo.matrix[i][j];
+
+            if (isTargetCell) {
+              if (operation.type === "show_old") {
+                cellContent = `<span class="cell-value">${formatValue(
+                  operation.oldValue
+                )}</span>`;
+                if (operation.oldValue !== currentValue) {
+                  cellContent += `<span class="old-value">${formatValue(
+                    operation.oldValue
+                  )}</span>`;
+                }
+              } else if (operation.type === "show_calculation") {
+                cellContent = `<span class="cell-value">${formatValue(
+                  operation.oldValue
+                )}</span>`;
+                cellContent += `<span class="calculation-value">${formatValue(
+                  operation.dik
+                )} + ${formatValue(operation.dkj)}</span>`;
+              } else if (operation.type === "compare") {
+                cellContent = `<span class="cell-value">${formatValue(
+                  operation.oldValue
+                )}</span>`;
+                cellContent += `<span class="old-value">${formatValue(
+                  operation.oldValue
+                )}</span>`;
+                cellContent += `<span class="calculation-value">${formatValue(
+                  operation.sum
+                )}</span>`;
+              } else if (operation.type === "update") {
+                cellContent = `<span class="old-value">${formatValue(
+                  operation.oldValue
+                )}</span>`;
+                cellContent += `<span class="cell-value new-value">${formatValue(
+                  operation.newValue
+                )}</span>`;
+              } else if (operation.type === "updated") {
+                cellContent = `<span class="cell-value new-value">${formatValue(
+                  operation.newValue
+                )}</span>`;
+              } else {
+                cellContent = `<span class="cell-value">${formatValue(
+                  currentValue
+                )}</span>`;
+              }
+            } else {
+              cellContent = `<span class="cell-value">${formatValue(
+                currentValue
+              )}</span>`;
+            }
+
+            tableHTML += `<td class="${cellClass.trim()}">${cellContent}</td>`;
+          }
+          tableHTML += "</tr>";
+        }
+        tableHTML += "</tbody></table>";
+
+        tableContainer.innerHTML = tableHTML;
+
+        // Mettre à jour les détails de calcul
+        let formulaHTML = "";
+        if (operation.type === "show_old") {
+          formulaHTML = `
+                    <div class="formula-step active" id="formula-step-1">
+                        <span class="formula-old">Ancienne valeur : D[${
+                          labels[operation.i]
+                        }][${labels[operation.j]}] = ${formatValue(
+            operation.oldValue
+          )}</span>
+                    </div>
+                `;
+        } else if (operation.type === "show_calculation") {
+          formulaHTML = `
+                    <div class="formula-step active" id="formula-step-2">
+                        <span class="formula-calc">Calcul via pivot ${
+                          labels[operation.k]
+                        } : D[${labels[operation.i]}][${
+            labels[operation.k]
+          }] + D[${labels[operation.k]}][${labels[operation.j]}]</span>
+                    </div>
+                    <div class="formula-step active" id="formula-step-3">
+                        <span class="formula-calc">= ${formatValue(
+                          operation.dik
+                        )} + ${formatValue(operation.dkj)} = ${formatValue(
+            operation.sum
+          )}</span>
+                    </div>
+                `;
+        } else if (operation.type === "compare") {
+          formulaHTML = `
+                    <div class="formula-step active" id="formula-step-4">
+                        <span class="formula-calc">Calcul : ${formatValue(
+                          operation.sum
+                        )}</span>
+                    </div>
+                    <div class="formula-step active" id="formula-step-5">
+                        <span class="formula-old">Ancienne valeur : ${formatValue(
+                          operation.oldValue
+                        )}</span>
+                    </div>
+                    <div class="formula-step active" id="formula-step-6">
+                        Comparaison : min(${formatValue(
+                          operation.oldValue
+                        )}, ${formatValue(operation.sum)})
+                    </div>
+                `;
+        } else if (operation.type === "update") {
+          formulaHTML = `
+                    <div class="formula-step active" id="formula-step-7">
+                        <span style="color: #198754; font-weight: 700;">✓ Nouveau chemin plus court !</span>
+                    </div>
+                    <div class="formula-step active" id="formula-step-8">
+                        Mise à jour : <span class="formula-old">${formatValue(
+                          operation.oldValue
+                        )}</span> → 
+                        <span class="formula-result">${formatValue(
+                          operation.newValue
+                        )}</span>
+                    </div>
+                `;
+        } else if (operation.type === "updated") {
+          formulaHTML = `
+                    <div class="formula-step active" id="formula-step-9">
+                        <span class="formula-result">✓ Valeur mise à jour : D[${
+                          labels[operation.i]
+                        }][${labels[operation.j]}] = ${formatValue(
+            operation.newValue
+          )}</span>
+                    </div>
+                `;
+        } else if (operation.type === "no_change") {
+          formulaHTML = `
+                    <div class="formula-step active" id="formula-step-10">
+                        <span style="color: #6c757d; font-weight: 700;">Pas de changement : ${formatValue(
+                          operation.oldValue
+                        )} ≤ ${formatValue(operation.sum)}</span>
+                    </div>
+                `;
+        }
+
+        calculationDetails.innerHTML = `
+                <div class="calculation-title">${getOperationTitle(
+                  operation.type
+                )}</div>
+                <div class="calculation-text">${operation.description}</div>
+                <div class="calculation-formula">
+                    ${formulaHTML}
+                </div>
+            `;
+      }
+
+      function getOperationTitle(type) {
+        const titles = {
+          show_old: "📊 Ancienne valeur",
+          show_calculation: "🧮 Calcul via pivot",
+          compare: "⚖️ Comparaison",
+          update: "✨ Mise à jour",
+          updated: "✅ Valeur mise à jour",
+          no_change: "➡️ Pas de changement",
+          impossible: "🚫 Chemin impossible",
+          negative_cycle_detected: "⚠️ CYCLE NÉGATIF",
+          negative_cycle_detected_final: "⚠️ CYCLE NÉGATIF",
+        };
+        return titles[type] || "Étape en cours";
+      }
+
+      function updateProgressIndicator() {
+        elements.progressIndicator.innerHTML = "";
+
+        for (let i = 0; i <= n; i++) {
+          const stepElement = document.createElement("div");
+          stepElement.className = "progress-step";
+
+          if (i === 0) {
+            stepElement.textContent = "D⁰";
+            stepElement.title = "Matrice initiale";
+          } else {
+            stepElement.textContent = `D${i}`;
+            stepElement.title = `Transformation ${i}`;
+          }
+
+          if (i < currentMatrixIndex) {
+            stepElement.classList.add("completed");
+          } else if (i === currentMatrixIndex) {
+            stepElement.classList.add("active");
+            // Si c'est l'étape avec un cycle négatif, ajouter une classe spéciale
+            if (animationData[currentMatrixIndex]?.hasNegativeCycle) {
+              stepElement.classList.add("negative-cycle");
+              stepElement.textContent = "⚠️";
+              stepElement.title = "Cycle négatif détecté";
+            }
+          }
+
+          stepElement.addEventListener("click", () => {
+            if (i <= currentMatrixIndex) {
+              currentMatrixIndex = i;
+              currentOperationIndex = 0;
+              isPlaying = false;
+              if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+              }
+              showCurrentStep();
+              updateControls();
+            }
+          });
+
+          elements.progressIndicator.appendChild(stepElement);
+        }
+      }
+
+      function startAnimation() {
+        if (animationInterval) {
+          clearInterval(animationInterval);
+        }
+
+        animationInterval = setInterval(() => {
+          const currentMatrixData = animationData[currentMatrixIndex];
+
+          // Vérifier si on a un cycle négatif
+          if (currentMatrixData.hasNegativeCycle) {
+            // Arrêter l'animation
+            clearInterval(animationInterval);
+            animationInterval = null;
+            isPlaying = false;
+            updateControls();
+            return;
+          }
+
+          if (currentOperationIndex < currentMatrixData.operations.length) {
+            currentOperationIndex++;
+            showCurrentStep();
+          } else {
+            // Passer à la matrice suivante
+            if (currentMatrixIndex < animationData.length - 1) {
+              currentMatrixIndex++;
+              currentOperationIndex = 0;
+              showCurrentStep();
+            } else {
+              // Animation terminée
+              clearInterval(animationInterval);
+              animationInterval = null;
+              isPlaying = false;
+              updateControls();
+              elements.currentStepDesc.textContent =
+                "✅ Transformation terminée !";
+              elements.graphSection.style.display = "block";
+            }
+          }
+        }, speed);
+      }
+
+      // Fonction pour changer la vue du graphe
+      function changeGraphView(mode) {
+        graphViewMode = mode;
+
+        // Mettre à jour les boutons actifs
+        elements.showAllPathsBtn.classList.remove("active");
+        elements.showDirectPathsBtn.classList.remove("active");
+        elements.showShortestPathsBtn.classList.remove("active");
+
+        if (mode === "all") {
+          elements.showAllPathsBtn.classList.add("active");
+        } else if (mode === "direct") {
+          elements.showDirectPathsBtn.classList.add("active");
+        } else if (mode === "shortest") {
+          elements.showShortestPathsBtn.classList.add("active");
+        }
+
+        // Redessiner le graphe
+        if (finalMatrix) {
+          drawGraph();
+        }
+      }
+
+      // Fonction pour afficher le graphe final
+      function showFinalGraph() {
+        if (!finalMatrix) return;
+
+        // Afficher le conteneur du graphe
+        elements.graphContainer.style.display = "block";
+
+        // Dessiner le graphe
+        drawGraph();
+
+        // Faire défiler jusqu'au graphe
+        elements.graphContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+
+      // Fonction pour dessiner le graphe
+      function drawGraph() {
+        // Obtenir le contexte du canvas
+        const canvas = elements.graphCanvas;
+        const ctx = canvas.getContext("2d");
+
+        // Définir la taille du canvas
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = 500;
+
+        // Effacer le canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Si un cycle négatif a été détecté, afficher un message
+        if (hasNegativeCycle) {
+          ctx.fillStyle = "#dc3545";
+          ctx.font = "bold 24px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(
+            "⚠️ CYCLE NÉGATIF DÉTECTÉ",
+            canvas.width / 2,
+            canvas.height / 2 - 30
+          );
+          ctx.font = "18px Arial";
+          ctx.fillText(
+            "L'algorithme s'est arrêté",
+            canvas.width / 2,
+            canvas.height / 2 + 10
+          );
+          ctx.font = "16px Arial";
+          ctx.fillText(
+            "Impossible de calculer les plus courts chemins",
+            canvas.width / 2,
+            canvas.height / 2 + 40
+          );
+          return;
+        }
+
+        // Définir les paramètres du graphe
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.min(canvas.width, canvas.height) * 0.35;
+        const nodeRadius = 30;
+
+        // Calculer les positions des nœuds en cercle
+        const nodePositions = [];
+        for (let i = 0; i < n; i++) {
+          const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+          nodePositions.push({ x, y, label: labels[i] });
+        }
+
+        // Fonction pour dessiner une arête courbée
+        function drawCurvedEdge(
+          ctx,
+          fromX,
+          fromY,
+          toX,
+          toY,
+          weight,
+          color = "#6c757d",
+          curveOffset = 0
+        ) {
+          const dx = toX - fromX;
+          const dy = toY - fromY;
+          const length = Math.sqrt(dx * dx + dy * dy);
+          const normX = dx / length;
+          const normY = dy / length;
+
+          // Ajuster les points pour ne pas dessiner sur les nœuds
+          const startX = fromX + normX * nodeRadius;
+          const startY = fromY + normY * nodeRadius;
+          const endX = toX - normX * nodeRadius;
+          const endY = toY - normY * nodeRadius;
+
+          // Point de contrôle pour la courbure
+          const midX = (startX + endX) / 2;
+          const midY = (startY + endY) / 2;
+
+          // Calculer la direction perpendiculaire pour la courbure
+          const perpX = -normY;
+          const perpY = normX;
+
+          const controlX = midX + perpX * curveOffset;
+          const controlY = midY + perpY * curveOffset;
+
+          // Dessiner la courbe de Bézier
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // Dessiner la flèche
+          const arrowLength = 12;
+          const arrowAngle = Math.PI / 6;
+
+          // Calculer l'angle à la fin de la courbe
+          const t = 0.99; // Proche de la fin
+          const endTangentX =
+            2 * (1 - t) * (controlX - startX) + 2 * t * (endX - controlX);
+          const endTangentY =
+            2 * (1 - t) * (controlY - startY) + 2 * t * (endY - controlY);
+          const angle = Math.atan2(endTangentY, endTangentX);
+
+          ctx.beginPath();
+          ctx.moveTo(endX, endY);
+          ctx.lineTo(
+            endX - arrowLength * Math.cos(angle - arrowAngle),
+            endY - arrowLength * Math.sin(angle - arrowAngle)
+          );
+          ctx.moveTo(endX, endY);
+          ctx.lineTo(
+            endX - arrowLength * Math.cos(angle + arrowAngle),
+            endY - arrowLength * Math.sin(angle + arrowAngle)
+          );
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // Dessiner le poids
+          if (weight !== INF && weight !== 0) {
+            // Position du texte sur la courbe
+            const tText = 0.5;
+            const textX =
+              (1 - tText) * (1 - tText) * startX +
+              2 * (1 - tText) * tText * controlX +
+              tText * tText * endX;
+            const textY =
+              (1 - tText) * (1 - tText) * startY +
+              2 * (1 - tText) * tText * controlY +
+              tText * tText * endY;
+
+            // Décaler le texte perpendiculairement à la courbe
+            const textOffset = 15;
+            const textAngle = Math.atan2(
+              controlY - (startY + endY) / 2,
+              controlX - (startX + endX) / 2
+            );
+            const finalTextX =
+              textX + Math.cos(textAngle + Math.PI / 2) * textOffset;
+            const finalTextY =
+              textY + Math.sin(textAngle + Math.PI / 2) * textOffset;
+
+            // Rectangle de fond
+            ctx.fillStyle = "white";
+            ctx.fillRect(finalTextX - 25, finalTextY - 15, 50, 30);
+
+            // Bordure
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(finalTextX - 25, finalTextY - 15, 50, 30);
+
+            // Texte du poids
+            ctx.fillStyle = "#dc3545";
+            ctx.font = "bold 14px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(weight.toString(), finalTextX, finalTextY);
+          }
+        }
+
+        // Fonction pour déterminer si une arête est directe (dans la matrice initiale)
+        function isDirectEdge(i, j) {
+          return (
+            baseMatrix[i][j] < INF && baseMatrix[i][j] === finalMatrix[i][j]
+          );
+        }
+
+        // Fonction pour déterminer si une arête a été optimisée
+        function isOptimizedEdge(i, j) {
+          return (
+            finalMatrix[i][j] < INF && baseMatrix[i][j] !== finalMatrix[i][j]
+          );
+        }
+
+        // Dessiner les arêtes selon le mode de vue
+        let edgeCount = 0;
+        const edgeOffsets = {};
+
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < n; j++) {
+            if (i !== j && finalMatrix[i][j] < INF) {
+              // Vérifier si l'arête doit être affichée selon le mode
+              let shouldDraw = false;
+              let edgeColor = "#6c757d"; // Gris par défaut
+
+              if (graphViewMode === "all") {
+                shouldDraw = true;
+                if (isDirectEdge(i, j)) {
+                  edgeColor = "#28a745"; // Vert pour les chemins directs
+                } else if (isOptimizedEdge(i, j)) {
+                  edgeColor = "#ffc107"; // Jaune pour les chemins optimisés
+                }
+              } else if (graphViewMode === "direct") {
+                if (isDirectEdge(i, j)) {
+                  shouldDraw = true;
+                  edgeColor = "#28a745"; // Vert pour les chemins directs
+                }
+              } else if (graphViewMode === "shortest") {
+                if (isOptimizedEdge(i, j)) {
+                  shouldDraw = true;
+                  edgeColor = "#ffc107"; // Jaune pour les chemins optimisés
+                }
+              }
+
+              if (shouldDraw) {
+                const from = nodePositions[i];
+                const to = nodePositions[j];
+
+                // Gérer les arêtes multiples (A→B et B→A)
+                const edgeKey = `${Math.min(i, j)}-${Math.max(i, j)}`;
+                let curveOffset = 0;
+
+                if (edgeOffsets[edgeKey]) {
+                  curveOffset = edgeOffsets[edgeKey] * 30;
+                  edgeOffsets[edgeKey] += 1;
+                } else {
+                  edgeOffsets[edgeKey] = 1;
+                }
+
+                // Inverser la courbure pour l'arête inverse
+                if (i > j) {
+                  curveOffset = -curveOffset;
+                }
+
+                drawCurvedEdge(
+                  ctx,
+                  from.x,
+                  from.y,
+                  to.x,
+                  to.y,
+                  finalMatrix[i][j],
+                  edgeColor,
+                  curveOffset
+                );
+                edgeCount++;
+              }
+            }
+          }
+        }
+
+        // Dessiner les nœuds
+        nodePositions.forEach((node, index) => {
+          // Cercle du nœud
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+          ctx.fillStyle = "#0d6efd";
+          ctx.fill();
+
+          // Bordure du nœud
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+          ctx.strokeStyle = "#0b5ed7";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // Texte du nœud
+          ctx.fillStyle = "white";
+          ctx.font = "bold 20px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(node.label, node.x, node.y);
+
+          // Afficher les distances vers les autres nœuds si peu d'arêtes
+          if (edgeCount <= 10 && n <= 4) {
+            ctx.fillStyle = "#6c757d";
+            ctx.font = "12px Arial";
+            let yOffset = nodeRadius + 20;
+
+            for (let j = 0; j < n; j++) {
+              if (j !== index && finalMatrix[index][j] < INF) {
+                const distance = finalMatrix[index][j];
+                ctx.fillText(
+                  `${labels[j]}: ${distance}`,
+                  node.x,
+                  node.y + yOffset
+                );
+                yOffset += 15;
+              }
+            }
+          }
+        });
+
+        // Afficher un message si aucune arête
+        if (edgeCount === 0) {
+          ctx.fillStyle = "#dc3545";
+          ctx.font = "bold 16px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(
+            "Aucune arête à afficher dans ce mode",
+            centerX,
+            centerY
+          );
+        }
+      }
+
+      // Événements
+      elements.startAlgorithm.addEventListener("click", () => {
+        prepareAlgorithm();
+        currentMatrixIndex = 0;
+        currentOperationIndex = 0;
+        isPlaying = true;
+        showCurrentStep();
+        updateControls();
+        startAnimation();
+      });
+
+      elements.playPause.addEventListener("click", () => {
+        if (animationData.length === 0) return;
+
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+          startAnimation();
+        } else {
+          if (animationInterval) {
+            clearInterval(animationInterval);
+            animationInterval = null;
+          }
+        }
+        updateControls();
+      });
+
+      elements.prevStep.addEventListener("click", () => {
+        if (currentMatrixIndex === 0 && currentOperationIndex === 0) return;
+
+        if (currentOperationIndex > 0) {
+          currentOperationIndex--;
+        } else if (currentMatrixIndex > 0) {
+          currentMatrixIndex--;
+          const prevMatrixData = animationData[currentMatrixIndex];
+          currentOperationIndex = prevMatrixData.operations.length;
+        }
+
+        isPlaying = false;
+        if (animationInterval) {
+          clearInterval(animationInterval);
+          animationInterval = null;
+        }
+        showCurrentStep();
+      });
+
+      elements.nextStep.addEventListener("click", () => {
+        const currentMatrixData = animationData[currentMatrixIndex];
+
+        if (currentOperationIndex < currentMatrixData.operations.length) {
+          currentOperationIndex++;
+        } else if (currentMatrixIndex < animationData.length - 1) {
+          currentMatrixIndex++;
+          currentOperationIndex = 0;
+        }
+
+        isPlaying = false;
+        if (animationInterval) {
+          clearInterval(animationInterval);
+          animationInterval = null;
+        }
+        showCurrentStep();
+      });
+
+      elements.restart.addEventListener("click", () => {
+        currentMatrixIndex = 0;
+        currentOperationIndex = 0;
+        isPlaying = false;
+        if (animationInterval) {
+          clearInterval(animationInterval);
+          animationInterval = null;
+        }
+        showCurrentStep();
+      });
+
+      // Initialisation
+      init();
+    </script>
+  </body>
+</html>

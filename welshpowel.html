@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Welsh–Powell Visualisation — Finale</title>
+    <style>
+      /* ================= VARIABLES & RESET ================= */
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --primary-light: rgba(102, 126, 234, 0.1);
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --card-bg: rgba(255, 255, 255, 0.95);
+        --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        --card-border: rgba(255, 255, 255, 0.3);
+        --text-primary: #2d3748;
+        --text-secondary: #718096;
+        --text-muted: #a0aec0;
+        --border-light: #e2e8f0;
+        --border-medium: #cbd5e0;
+
+        /* Color palette améliorée */
+        --c0: #667eea;
+        --c1: #764ba2;
+        --c2: #4299e1;
+        --c3: #48bb78;
+        --c4: #ed8936;
+        --c5: #f56565;
+        --c6: #9f7aea;
+        --c7: #38b2ac;
+        --c8: #ecc94b;
+        --c9: #4fd1c5;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+      }
+
+      html,
+      body {
+        height: 100%;
+        background: var(--bg);
+        color: #111827;
+        overflow-y: auto;
+        overflow-x: auto;
+      }
+
+      /* ================= HEADER AMÉLIORÉ ================= */
+      header {
+        padding: 20px 32px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--card-border);
+        position: relative;
+        overflow: auto;
+        flex-shrink: 0;
+      }
+
+      header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: var(--primary-gradient);
+      }
+
+      header h1 {
+        font-size: 24px;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
+      }
+
+      .subtitle {
+        color: var(--text-secondary);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      /* ================= LAYOUT PRINCIPAL ================= */
+      .main-container {
+        display: flex;
+        height: calc(100vh - 100px);
+        padding: 20px;
+        gap: 20px;
+        max-width: 1600px;
+        margin: 0 auto;
+        overflow-y: auto;
+        overflow-x: auto;
+      }
+
+      /* ================= PANEL DES CONTRÔLES ================= */
+      .controls-panel {
+        width: 320px;
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid var(--card-border);
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow: auto;
+        flex-shrink: 0;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 10px;
+      }
+
+      .controls-panel label {
+        font-size: 13px;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 6px;
+        display: block;
+      }
+
+      .controls-panel input,
+      .controls-panel select {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border-medium);
+        background: white;
+        width: 100%;
+        font-size: 13px;
+        transition: all 0.3s ease;
+      }
+
+      .controls-panel input:focus,
+      .controls-panel select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      /* ================= BOUTONS AMÉLIORÉS ================= */
+      button {
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      button.primary {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      button.primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+      }
+
+      button:not(.primary) {
+        background: white;
+        color: var(--text-primary);
+        border: 1px solid var(--border-medium);
+      }
+
+      button:not(.primary):hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        transform: translateY(-2px);
+      }
+
+      /* ================= CONTENU PRINCIPAL ================= */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        overflow: auto;
+      }
+
+      /* ================= GRAPHE ET TABLEAU CÔTE À CÔTE ================= */
+      .visualization-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        height: 65vh;
+        flex: 1;
+      }
+
+      /* Section Graph */
+      .graph-section {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        border: 1px solid var(--card-border);
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+
+      .graph-header {
+        padding: 16px 20px;
+        background: var(--primary-light);
+        border-bottom: 1px solid var(--border-light);
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .graph-container {
+        flex: 1;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #graph {
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Section Tableau */
+      .table-section {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        border: 1px solid var(--card-border);
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+
+      .table-header {
+        padding: 16px 20px;
+        background: var(--primary-light);
+        border-bottom: 1px solid var(--border-light);
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .table-container {
+        flex: 1;
+        overflow: auto;
+        padding: 15px;
+      }
+
+      #table-scroll {
+        height: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border-light);
+        background: white;
+        overflow: auto;
+        padding: 10px;
+      }
+
+      #color-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 13px;
+        min-width: 300px;
+      }
+
+      #color-table th {
+        background: var(--primary-light);
+        padding: 12px 10px;
+        text-align: center;
+        font-weight: 600;
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--border-light);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      #color-table td {
+        border: 1px solid var(--border-light);
+        padding: 12px 10px;
+        text-align: center;
+        min-width: 40px;
+        height: 40px;
+        vertical-align: middle;
+      }
+
+      .color-cell {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 700;
+        min-width: 35px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        font-size: 12px;
+      }
+
+      /* ================= PANEL BAS (LEGEND + INFO) ================= */
+      .bottom-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        height: 25vh;
+        flex-shrink: 0;
+      }
+
+      /* Panel de tri */
+      .sorting-panel {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        border: 1px solid var(--card-border);
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+
+      .sorting-header {
+        padding: 16px 20px;
+        background: var(--primary-light);
+        border-bottom: 1px solid var(--border-light);
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .sorting-content {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      #sorting-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .sort-item {
+        background: var(--primary-light);
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--primary-color);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .sort-item.highlight {
+        background: var(--primary-gradient);
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      /* Legend panel */
+      .legend-panel {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        border: 1px solid var(--card-border);
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+
+      .legend-header {
+        padding: 16px 20px;
+        background: var(--primary-light);
+        border-bottom: 1px solid var(--border-light);
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .legend-content {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      #legend-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: white;
+        border-radius: 10px;
+        border: 1px solid var(--border-light);
+        transition: all 0.3s ease;
+      }
+
+      .legend-item:hover {
+        transform: translateX(3px);
+        border-color: var(--primary-color);
+      }
+
+      .legend-swatch {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      /* ================= CONTROLS DE LECTURE ================= */
+      .play-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 10px;
+      }
+
+      .meta {
+        display: flex;
+        gap: 20px;
+        color: var(--text-primary);
+        font-size: 13px;
+        margin-top: 15px;
+        padding: 15px;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid var(--border-light);
+      }
+
+      .meta div {
+        flex: 1;
+        text-align: center;
+      }
+
+      .meta strong {
+        display: block;
+        font-size: 18px;
+        color: var(--primary-color);
+        margin-bottom: 4px;
+      }
+
+      /* ================= STYLES DES NŒUDS ================= */
+      .node .ring {
+        stroke-width: 3 !important;
+        stroke: var(--primary-color) !important;
+      }
+
+      .dim {
+        opacity: 0.3;
+      }
+
+      .highlight-select circle {
+        filter: drop-shadow(0 8px 25px rgba(102, 126, 234, 0.3));
+        stroke: var(--primary-color) !important;
+        stroke-width: 3 !important;
+      }
+
+      .highlight-test circle {
+        stroke-width: 3 !important;
+        stroke: #48bb78 !important;
+      }
+
+      .newly-colored circle {
+        filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
+        animation: pulse 0.6s ease;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+      }
+
+      /* ================= RESPONSIVE ================= */
+      @media (max-width: 1200px) {
+        .main-container {
+          flex-direction: column;
+          height: auto;
+          overflow-y: auto;
+        }
+
+        .controls-panel {
+          width: 100%;
+          height: auto;
+        }
+
+        .visualization-container {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+
+        .bottom-panel {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+      }
+
+      @media (max-width: 768px) {
+        header {
+          padding: 16px;
+        }
+
+        header h1 {
+          font-size: 20px;
+        }
+
+        .main-container {
+          padding: 15px;
+        }
+
+        .visualization-container {
+          gap: 15px;
+        }
+
+        .graph-header,
+        .table-header,
+        .sorting-header,
+        .legend-header {
+          padding: 12px 16px;
+          font-size: 14px;
+        }
+
+        .graph-container,
+        .table-container {
+          padding: 10px;
+        }
+
+        .input-row {
+          flex-direction: column;
+        }
+
+        .play-controls {
+          flex-direction: column;
+        }
+
+        .meta {
+          flex-direction: column;
+          gap: 12px;
+        }
+      }
+
+      /* ================= FOOTER ================= */
+      footer {
+        padding: 15px 32px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      footer div {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 12px 20px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: inline-block;
+      }
+    </style>
+    <!-- Font Awesome pour les icônes -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header>
+      <h1>Welsh–Powell — Visualisation Interactive</h1>
+      <p class="subtitle">
+        Coloration de graphes - Visualisez l'algorithme étape par étape
+      </p>
+    </header>
+
+    <div class="main-container">
+      <!-- CONTROLS PANEL -->
+      <div class="controls-panel">
+        <div class="input-row">
+          <button id="load-default" class="primary">
+            <i class="fas fa-rocket"></i> Exemple
+          </button>
+          <button id="clear"><i class="fas fa-trash"></i> Effacer</button>
+        </div>
+
+        <div class="input-group">
+          <label for="nodes-input">
+            <i class="fas fa-circle-nodes"></i> Sommets (A,B,C,...)
+          </label>
+          <input id="nodes-input" placeholder="Ex: A,B,C,D,E,F" />
+        </div>
+
+        <div class="input-group">
+          <label for="edges-input">
+            <i class="fas fa-link"></i> Arêtes (X-Y,X-Z,...)
+          </label>
+          <input id="edges-input" placeholder="Ex: A-B,A-C,B-C,C-D,D-E" />
+        </div>
+
+        <div class="input-row">
+          <button id="load-custom" class="primary">
+            <i class="fas fa-upload"></i> Charger
+          </button>
+          <button id="run" class="primary">
+            <i class="fas fa-play"></i> Exécuter
+          </button>
+        </div>
+
+        <div class="play-controls">
+          <button id="prev"><i class="fas fa-chevron-left"></i> Préc.</button>
+          <button id="play" class="primary">
+            <i class="fas fa-play"></i> Play
+          </button>
+          <button id="next"><i class="fas fa-chevron-right"></i> Suiv.</button>
+          <select id="speed" style="flex: 1; padding: 10px">
+            <option value="1000">1x</option>
+            <option value="600">1.6x</option>
+            <option value="300">3x</option>
+          </select>
+          <button id="restart"><i class="fas fa-redo"></i> Restart</button>
+        </div>
+
+        <div class="meta">
+          <div>
+            <strong id="step-indicator">0/0</strong>
+            <div>Étape</div>
+          </div>
+          <div>
+            <strong id="colors-count">0</strong>
+            <div>Couleurs</div>
+          </div>
+          <div>
+            <strong id="node-count">0</strong>
+            <div>Sommets</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="main-content">
+        <!-- GRAPHE ET TABLEAU CÔTE À CÔTE -->
+        <div class="visualization-container">
+          <!-- Graph Section -->
+          <div class="graph-section">
+            <div class="graph-header">
+              <i class="fas fa-project-diagram"></i> Visualisation du Graphe
+            </div>
+            <div class="graph-container">
+              <svg id="graph" viewBox="0 0 800 500"></svg>
+            </div>
+          </div>
+
+          <!-- Table Section -->
+          <div class="table-section">
+            <div class="table-header">
+              <i class="fas fa-table"></i> Tableau de Coloration
+            </div>
+            <div class="table-container">
+              <div id="table-scroll">
+                <table id="color-table"></table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL BAS (SORTING + LEGEND) -->
+        <div class="bottom-panel">
+          <!-- Sorting Panel -->
+          <div class="sorting-panel">
+            <div class="sorting-header">
+              <i class="fas fa-sort-amount-down"></i> Ordre de Traitement
+            </div>
+            <div class="sorting-content">
+              <div id="sorting-list"></div>
+            </div>
+          </div>
+
+          <!-- Legend Panel -->
+          <div class="legend-panel">
+            <div class="legend-header">
+              <i class="fas fa-palette"></i> Légende des Couleurs
+            </div>
+            <div class="legend-content">
+              <div id="legend-items"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div>
+        © 2024 - Visualisation Interactive Welsh-Powell | Algorithmes Avancés
+      </div>
+    </footer>
+
+    <!-- SCRIPT (identique) -->
+    <script>
+      const PALETTE = [
+        "#667eea",
+        "#764ba2",
+        "#4299e1",
+        "#48bb78",
+        "#ed8936",
+        "#f56565",
+        "#9f7aea",
+        "#38b2ac",
+        "#ecc94b",
+        "#4fd1c5",
+      ];
+
+      const svg = document.getElementById("graph");
+      const table = document.getElementById("color-table");
+      const legendItems = document.getElementById("legend-items");
+      const sortingList = document.getElementById("sorting-list");
+      const stepIndicator = document.getElementById("step-indicator");
+      const colorsCountEl = document.getElementById("colors-count");
+      const nodeCountEl = document.getElementById("node-count");
+
+      const nodesInput = document.getElementById("nodes-input");
+      const edgesInput = document.getElementById("edges-input");
+      const loadDefaultBtn = document.getElementById("load-default");
+      const loadCustomBtn = document.getElementById("load-custom");
+      const runBtn = document.getElementById("run");
+      const clearBtn = document.getElementById("clear");
+      const prevBtn = document.getElementById("prev");
+      const nextBtn = document.getElementById("next");
+      const playBtn = document.getElementById("play");
+      const restartBtn = document.getElementById("restart");
+      const speedSel = document.getElementById("speed");
+
+      let graph = { nodes: [], edges: [] };
+      let adj = {};
+      let degrees = {};
+      let order = [];
+      let steps = [];
+      let stateSnapshots = [];
+      let stepIndex = 0;
+      let playingInterval = null;
+
+      function unique(arr) {
+        return Array.from(new Set(arr));
+      }
+      function deepCopy(obj) {
+        return JSON.parse(JSON.stringify(obj));
+      }
+      function clamp(v, a, b) {
+        return Math.max(a, Math.min(b, v));
+      }
+
+      function loadDefaultGraph() {
+        graph = {
+          nodes: ["A", "B", "C", "D", "E", "F"],
+          edges: [
+            ["A", "B"],
+            ["A", "C"],
+            ["A", "D"],
+            ["B", "C"],
+            ["B", "E"],
+            ["D", "E"],
+            ["E", "F"],
+          ],
+        };
+        nodesInput.value = graph.nodes.join(",");
+        edgesInput.value = graph.edges.map((e) => e.join("-")).join(",");
+        prepareGraph();
+      }
+
+      function loadFromInput() {
+        const rawNodes = (nodesInput.value || "").trim();
+        const rawEdges = (edgesInput.value || "").trim();
+        if (!rawNodes) {
+          alert("Veuillez entrer la liste des sommets (ex: A,B,C)");
+          return;
+        }
+        const nodes = rawNodes
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const edges = rawEdges
+          ? rawEdges
+              .split(",")
+              .map((s) => s.trim())
+              .map((pair) => {
+                const p = pair.split("-").map((x) => x.trim());
+                return p.length === 2 ? p : null;
+              })
+              .filter(Boolean)
+          : [];
+        graph = { nodes: unique(nodes), edges };
+        prepareGraph();
+      }
+
+      function prepareGraph() {
+        adj = {};
+        graph.nodes.forEach((n) => (adj[n] = []));
+        graph.edges.forEach((e) => {
+          const [a, b] = e;
+          if (!a || !b) return;
+          if (!adj[a]) adj[a] = [];
+          if (!adj[b]) adj[b] = [];
+          if (!adj[a].includes(b)) adj[a].push(b);
+          if (!adj[b].includes(a)) adj[b].push(a);
+        });
+        degrees = {};
+        graph.nodes.forEach((n) => (degrees[n] = (adj[n] || []).length));
+        order = [...graph.nodes].sort((x, y) => {
+          if (degrees[y] !== degrees[x]) return degrees[y] - degrees[x];
+          return String(x).localeCompare(String(y));
+        });
+
+        steps = [];
+        stateSnapshots = [];
+        stepIndex = 0;
+        renderLegend([]);
+        renderGraphBase();
+        updateMeta();
+        renderSortingList(order);
+        nodeCountEl.textContent = graph.nodes.length;
+      }
+
+      let nodePositions = {};
+      function clearSvg() {
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+      }
+
+      function renderGraphBase() {
+        clearSvg();
+        nodePositions = {};
+        const W = 800,
+          H = 500;
+        const cx = W / 2,
+          cy = H / 2,
+          r = Math.min(W, H) / 2.8;
+        const n = graph.nodes.length;
+
+        for (let i = 0; i < n; i++) {
+          const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+          const x = cx + r * Math.cos(angle);
+          const y = cy + r * Math.sin(angle);
+          nodePositions[graph.nodes[i]] = { x, y };
+        }
+
+        graph.edges.forEach((e) => {
+          const [a, b] = e;
+          if (!nodePositions[a] || !nodePositions[b]) return;
+          const line = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          line.setAttribute("class", "edge");
+          line.setAttribute("x1", nodePositions[a].x);
+          line.setAttribute("y1", nodePositions[a].y);
+          line.setAttribute("x2", nodePositions[b].x);
+          line.setAttribute("y2", nodePositions[b].y);
+          line.setAttribute("data-edge", `${a}-${b}`);
+          line.setAttribute("stroke", "#cbd5e0");
+          line.setAttribute("stroke-width", "2.5");
+          svg.appendChild(line);
+        });
+
+        for (const node of graph.nodes) {
+          const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          g.setAttribute("class", "node");
+          g.setAttribute("data-node", node);
+
+          const pos = nodePositions[node];
+          const circle = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+          );
+          circle.setAttribute("cx", pos.x);
+          circle.setAttribute("cy", pos.y);
+          circle.setAttribute("r", 22);
+          circle.setAttribute("fill", "#f7fafc");
+          circle.setAttribute("stroke", "#cbd5e0");
+          circle.setAttribute("stroke-width", "2");
+
+          const text = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+          );
+          text.setAttribute("x", pos.x);
+          text.setAttribute("y", pos.y + 5);
+          text.setAttribute("text-anchor", "middle");
+          text.setAttribute("font-weight", "700");
+          text.setAttribute("font-size", "14");
+          text.setAttribute("fill", "#2d3748");
+          text.textContent = node;
+
+          g.appendChild(circle);
+          g.appendChild(text);
+          svg.appendChild(g);
+        }
+      }
+
+      function generateFineSteps() {
+        const colors = {};
+        order.forEach((n) => (colors[n] = null));
+        steps = [];
+        stateSnapshots = [];
+
+        steps.push({
+          type: "sorting-start",
+          info: "Tri décroissant par degré",
+          order: [...order],
+          degrees: deepCopy(degrees),
+        });
+        stateSnapshots.push(deepCopy(colors));
+
+        for (const n of order) {
+          steps.push({ type: "sorting-value", node: n, degree: degrees[n] });
+          stateSnapshots.push(deepCopy(colors));
+        }
+
+        steps.push({ type: "sorting-end", order: [...order] });
+        stateSnapshots.push(deepCopy(colors));
+
+        let colorIndex = 0;
+        const nodesLeft = () => order.filter((n) => colors[n] === null);
+
+        while (nodesLeft().length > 0) {
+          const currentColor = colorIndex;
+          const coloredThisColor = [];
+
+          steps.push({
+            type: "start-color",
+            colorIndex: currentColor,
+            info: `Début couleur C${currentColor + 1}`,
+          });
+          stateSnapshots.push(deepCopy(colors));
+
+          const first = nodesLeft()[0];
+          steps.push({
+            type: "select-node",
+            node: first,
+            colorIndex: currentColor,
+          });
+          stateSnapshots.push(deepCopy(colors));
+
+          colors[first] = currentColor;
+          coloredThisColor.push(first);
+          steps.push({
+            type: "apply-color",
+            node: first,
+            colorIndex: currentColor,
+            info: `${first} reçoit C${currentColor + 1}`,
+          });
+          stateSnapshots.push(deepCopy(colors));
+
+          for (const candidate of order) {
+            if (colors[candidate] !== null) continue;
+
+            steps.push({
+              type: "select-node",
+              node: candidate,
+              colorIndex: currentColor,
+              info: `Tester ${candidate} pour C${currentColor + 1}`,
+            });
+            stateSnapshots.push(deepCopy(colors));
+
+            let conflict = false;
+            for (const already of coloredThisColor) {
+              steps.push({
+                type: "test-adj",
+                node: candidate,
+                withNode: already,
+              });
+              stateSnapshots.push(deepCopy(colors));
+
+              const isAdj = (adj[candidate] || []).includes(already);
+              steps.push({
+                type: "adj-result",
+                node: candidate,
+                withNode: already,
+                adjacent: isAdj,
+              });
+              stateSnapshots.push(deepCopy(colors));
+
+              if (isAdj) {
+                conflict = true;
+                steps.push({
+                  type: "decision",
+                  node: candidate,
+                  result: "incompatible",
+                  withNode: already,
+                });
+                stateSnapshots.push(deepCopy(colors));
+                break;
+              }
+            }
+
+            if (!conflict) {
+              colors[candidate] = currentColor;
+              coloredThisColor.push(candidate);
+              steps.push({
+                type: "apply-color",
+                node: candidate,
+                colorIndex: currentColor,
+                info: `${candidate} reçoit C${currentColor + 1}`,
+              });
+              stateSnapshots.push(deepCopy(colors));
+            } else {
+              steps.push({
+                type: "skipped",
+                node: candidate,
+                colorIndex: currentColor,
+                info: `${candidate} ne peut pas être C${currentColor + 1}`,
+              });
+              stateSnapshots.push(deepCopy(colors));
+            }
+          }
+
+          steps.push({
+            type: "end-color",
+            colorIndex: currentColor,
+            info: `Fin C${currentColor + 1}`,
+          });
+          stateSnapshots.push(deepCopy(colors));
+          colorIndex++;
+          if (colorIndex > graph.nodes.length + 5) break;
+        }
+
+        steps.push({ type: "finished", info: "Coloriage terminé" });
+        stateSnapshots.push(deepCopy(colors));
+      }
+
+      function findEdgeElement(a, b) {
+        let el = svg.querySelector(`line[data-edge="${a}-${b}"]`);
+        if (!el) el = svg.querySelector(`line[data-edge="${b}-${a}"]`);
+        return el;
+      }
+
+      function renderSortingList(sorted) {
+        sortingList.innerHTML = "";
+        for (const n of sorted) {
+          const div = document.createElement("div");
+          div.className = "sort-item";
+          div.textContent = `${n} (${degrees[n]})`;
+          sortingList.appendChild(div);
+        }
+      }
+
+      function renderCurrentStep() {
+        if (steps.length === 0) {
+          renderGraphBase();
+          renderEmptyTable(order);
+          updateMeta();
+          return;
+        }
+        const idx = clamp(stepIndex, 0, steps.length - 1);
+        const step = steps[idx];
+        const colors = deepCopy(stateSnapshots[idx]);
+
+        const nodeGroups = svg.querySelectorAll("g.node");
+        nodeGroups.forEach((g) => {
+          const node = g.getAttribute("data-node");
+          const circle = g.querySelector("circle");
+          const colorIndex =
+            colors && colors[node] !== null ? colors[node] : null;
+          if (colorIndex === null || colorIndex === undefined) {
+            circle.setAttribute("fill", "#f7fafc");
+            g.classList.remove("newly-colored");
+          } else {
+            circle.setAttribute("fill", PALETTE[colorIndex % PALETTE.length]);
+          }
+          g.classList.remove(
+            "highlight-select",
+            "highlight-test",
+            "dim",
+            "newly-colored"
+          );
+        });
+
+        svg.querySelectorAll("line.edge").forEach((line) => {
+          line.style.stroke = "#cbd5e0";
+          line.style.strokeWidth = "2.5";
+        });
+
+        svg.querySelectorAll("g.node").forEach((g) => {
+          const n = g.getAttribute("data-node");
+          const c = colors[n];
+          if (c === null || c === undefined) g.classList.add("dim");
+          else g.classList.remove("dim");
+        });
+
+        switch (step.type) {
+          case "sorting-start":
+            renderSortingList(step.order);
+            break;
+          case "sorting-value":
+            renderSortingList(order);
+            const el = Array.from(sortingList.children).find((d) =>
+              d.textContent.startsWith(step.node + " ")
+            );
+            if (el) {
+              el.classList.add("highlight");
+              setTimeout(() => el.classList.remove("highlight"), 700);
+            }
+            break;
+          case "sorting-end":
+            renderSortingList(step.order);
+            break;
+          case "start-color":
+            highlightLegend(step.colorIndex);
+            break;
+          case "select-node":
+            const g = svg.querySelector(`g.node[data-node="${step.node}"]`);
+            if (g) g.classList.add("highlight-select");
+            break;
+          case "test-adj":
+            const a = step.node,
+              b = step.withNode;
+            const ga = svg.querySelector(`g.node[data-node="${a}"]`);
+            const gb = svg.querySelector(`g.node[data-node="${b}"]`);
+            if (ga) ga.classList.add("highlight-test");
+            if (gb) gb.classList.add("highlight-test");
+            const edgeEl = findEdgeElement(a, b);
+            if (edgeEl) {
+              edgeEl.style.stroke = "#2d3748";
+              edgeEl.style.strokeWidth = "3.5";
+            }
+            break;
+          case "adj-result":
+            const a2 = step.node,
+              b2 = step.withNode;
+            const edgeEl2 = findEdgeElement(a2, b2);
+            if (step.adjacent) {
+              if (edgeEl2) {
+                edgeEl2.style.stroke = "#f56565";
+                edgeEl2.style.strokeWidth = "3.5";
+              }
+            } else {
+              if (edgeEl2) {
+                edgeEl2.style.stroke = "#48bb78";
+                edgeEl2.style.strokeWidth = "3.5";
+              }
+            }
+            setTimeout(() => {
+              if (edgeEl2) {
+                edgeEl2.style.stroke = "#cbd5e0";
+                edgeEl2.style.strokeWidth = "2.5";
+              }
+            }, 600);
+            break;
+          case "apply-color":
+            const g2 = svg.querySelector(`g.node[data-node="${step.node}"]`);
+            if (g2) {
+              g2.classList.add("newly-colored");
+              const circle = g2.querySelector("circle");
+              circle.style.animation = "pulse 0.6s ease";
+              setTimeout(() => {
+                circle.style.animation = "";
+              }, 600);
+            }
+            break;
+          case "finished":
+            svg.querySelectorAll("g.node").forEach((g) => {
+              const circle = g.querySelector("circle");
+              circle.style.animation = "pulse 0.6s ease";
+              setTimeout(() => {
+                circle.style.animation = "";
+              }, 600);
+            });
+            break;
+        }
+
+        renderTableFromColors(colors, order);
+        const usedColors = computeUsedColorsFromMap(colors);
+        renderLegend(usedColors.map((i) => PALETTE[i % PALETTE.length]));
+        updateMeta();
+      }
+
+      function renderEmptyTable(order) {
+        if (!order || !Array.isArray(order)) return;
+        table.innerHTML = "";
+
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+
+        order.forEach((node) => {
+          const th = document.createElement("th");
+          th.textContent = node;
+          headerRow.appendChild(th);
+        });
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        table.appendChild(tbody);
+      }
+
+      function computeUsedColorsFromMap(colorsMap) {
+        const s = new Set();
+        Object.values(colorsMap).forEach((v) => {
+          if (v !== null && v !== undefined) s.add(v);
+        });
+        return Array.from(s).sort((a, b) => a - b);
+      }
+
+      function renderTableFromColors(colorsMap, order) {
+        if (!order || !Array.isArray(order)) return;
+        renderEmptyTable(order);
+
+        const tbody = table.querySelector("tbody");
+        const usedColors = computeUsedColorsFromMap(colorsMap);
+        if (usedColors.length === 0) return;
+
+        usedColors.forEach((ci) => {
+          const tr = document.createElement("tr");
+          order.forEach((node) => {
+            const td = document.createElement("td");
+            if (colorsMap[node] === ci) {
+              const label = document.createElement("span");
+              label.className = "color-cell";
+              label.textContent = `C${ci + 1}`;
+              label.style.background = PALETTE[ci % PALETTE.length];
+              td.appendChild(label);
+            } else {
+              td.textContent = "";
+            }
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      }
+
+      function renderLegend(colorsArray) {
+        legendItems.innerHTML = "";
+        for (let i = 0; i < colorsArray.length; i++) {
+          const div = document.createElement("div");
+          div.className = "legend-item";
+
+          const sw = document.createElement("div");
+          sw.className = "legend-swatch";
+          sw.style.background = colorsArray[i];
+
+          const label = document.createElement("div");
+          label.className = "legend-label";
+          label.textContent = `Couleur C${i + 1}`;
+
+          div.appendChild(sw);
+          div.appendChild(label);
+          legendItems.appendChild(div);
+        }
+      }
+
+      function highlightLegend(ci) {
+        const arr = [];
+        for (let i = 0; i <= ci; i++) arr.push(PALETTE[i % PALETTE.length]);
+        renderLegend(arr);
+      }
+
+      function updateMeta() {
+        stepIndicator.textContent = `${stepIndex + 1}/${Math.max(
+          1,
+          steps.length
+        )}`;
+        const s =
+          stateSnapshots[clamp(stepIndex, 0, stateSnapshots.length - 1)] || {};
+        const used = computeUsedColorsFromMap(s);
+        colorsCountEl.textContent = used.length;
+        nodeCountEl.textContent = graph.nodes.length;
+      }
+
+      function goToStep(i) {
+        if (steps.length === 0) return;
+        stepIndex = clamp(i, 0, steps.length - 1);
+        renderCurrentStep();
+      }
+
+      function stopPlaying() {
+        if (playingInterval) {
+          clearInterval(playingInterval);
+          playingInterval = null;
+        }
+        playBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+        playBtn.classList.add("primary");
+      }
+
+      prevBtn.addEventListener("click", () => {
+        stopPlaying();
+        goToStep(stepIndex - 1);
+      });
+
+      nextBtn.addEventListener("click", () => {
+        stopPlaying();
+        goToStep(stepIndex + 1);
+      });
+
+      playBtn.addEventListener("click", () => {
+        if (steps.length === 0) return;
+        if (playingInterval) {
+          stopPlaying();
+          return;
+        }
+        playBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+        playBtn.classList.remove("primary");
+
+        const ms = parseInt(speedSel.value || "1000", 10);
+        playingInterval = setInterval(() => {
+          if (stepIndex >= steps.length - 1) {
+            stopPlaying();
+            return;
+          }
+          stepIndex++;
+          renderCurrentStep();
+        }, ms);
+      });
+
+      restartBtn.addEventListener("click", () => {
+        stopPlaying();
+        stepIndex = 0;
+        renderCurrentStep();
+      });
+
+      speedSel.addEventListener("change", () => {
+        if (playingInterval) {
+          stopPlaying();
+          playBtn.click();
+        }
+      });
+
+      loadDefaultBtn.addEventListener("click", () => {
+        stopPlaying();
+        loadDefaultGraph();
+      });
+
+      loadCustomBtn.addEventListener("click", () => {
+        stopPlaying();
+        loadFromInput();
+      });
+
+      runBtn.addEventListener("click", () => {
+        if (!graph.nodes || graph.nodes.length === 0) {
+          alert("Chargez d'abord un graphe (exemple ou saisie)");
+          return;
+        }
+        stopPlaying();
+        prepareGraph();
+        generateFineSteps();
+        renderEmptyTable(order);
+        stepIndex = 0;
+        renderCurrentStep();
+      });
+
+      clearBtn.addEventListener("click", () => {
+        stopPlaying();
+        nodesInput.value = "";
+        edgesInput.value = "";
+        graph = { nodes: [], edges: [] };
+        adj = {};
+        degrees = {};
+        order = [];
+        steps = [];
+        stateSnapshots = [];
+        stepIndex = 0;
+        clearSvg();
+        table.innerHTML = "";
+        legendItems.innerHTML = "";
+        sortingList.innerHTML = "";
+        updateMeta();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight") nextBtn.click();
+        if (e.key === "ArrowLeft") prevBtn.click();
+        if (e.key === " ") {
+          e.preventDefault();
+          playBtn.click();
+        }
+      });
+
+      loadDefaultGraph();
+    </script>
+  </body>
+</html>
